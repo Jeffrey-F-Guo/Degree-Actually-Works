@@ -1,0 +1,5 @@
+crawl4ai
+dotenv
+pydantic
+crawl4ai-setup
+prettytable
