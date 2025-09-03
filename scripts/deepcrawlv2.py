@@ -1,17 +1,19 @@
 import asyncio
-from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, LLMConfig
+from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, LLMConfig, MatchMode
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
-from crawl4ai.deep_crawling.filters import FilterChain, DomainFilter
+from crawl4ai.deep_crawling.filters import FilterChain, DomainFilter, URLPatternFilter
 from pydantic import BaseModel, Field
 from typing import List
 import os
 from dotenv import load_dotenv
 import json
+from prettytable import PrettyTable
+import traceback
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv('GOOGLE_API_KEY')
-
+LOG_PATH = "logs"
 class EventEntry(BaseModel):
     name: str
     date: str
@@ -20,6 +22,24 @@ class EventEntry(BaseModel):
 
 class ExtractedEvents(BaseModel):
     events: List[EventEntry] = Field(..., description="A list of events with their details.")
+
+llm_prompt = """
+    Your role is to extract event information from markdown content.
+    Given markdown content from a webpage, extract and return a list of events.
+    Each event should have the following fields:
+
+    - name: The name/title of the event
+    - date: The date and time of the event (keep original format)
+    - location: Where the event is taking place
+    - source_url: The URL where this event information was found
+
+    If no events are found, return an empty list.
+    Be thorough and look for any event-related information including:
+    - Scheduled events, meetings, workshops
+    - Performances, lectures, seminars
+    - Social activities, sports events
+    - Academic events, deadlines
+"""
 
 async def main():
     # Configure extraction strategy
@@ -30,37 +50,26 @@ async def main():
         ),
         extraction_type="schema",
         input_format="markdown",
-        schema=ExtractedEvents.model_json_schema(),  # Updated method name
-        instruction="""Your role is to extract event information from markdown content.
-                    Given markdown content from a webpage, extract and return a list of events.
-                    Each event should have the following fields:
-
-                    - name: The name/title of the event
-                    - date: The date and time of the event (keep original format)
-                    - location: Where the event is taking place
-                    - source_url: The URL where this event information was found
-
-                    If no events are found, return an empty list.
-                    Be thorough and look for any event-related information including:
-                    - Scheduled events, meetings, workshops
-                    - Performances, lectures, seminars
-                    - Social activities, sports events
-                    - Academic events, deadlines
-                    """
+        schema=ExtractedEvents.model_json_schema(),
+        instruction=llm_prompt
     )
-    # link_filter = FilterChain([DomainFilter(allowed_domains=['win.wwu.edu'])])
+    link_filter = FilterChain(
+        filters = [
+            DomainFilter(
+                allowed_domains=['win.wwu.edu']
+            ),
+            URLPatternFilter(
+                patterns=[r".*/events$", r".*/event/\d+$"],
+            )
+        ],
+    )
     # Configure a 1-level deep crawl (depth=1 means one level deep)
     config = CrawlerRunConfig(
         deep_crawl_strategy=BFSDeepCrawlStrategy(
-            max_depth=1,
+            max_depth=2,
             include_external=False,
-            max_pages=10,
-            # filter_chain = link_filter,
-            # link_filter_patterns=[
-            #     r".*event.*",  # Include URLs containing 'event'
-            #     r".*calendar.*",  # Include URLs containing 'calendar'
-            #     r".*activity.*",  # Include URLs containing 'activity'
-            # ]
+            max_pages=50,
+            filter_chain = link_filter,
         ),
         extraction_strategy=llm_strategy,
         verbose=True
@@ -71,56 +80,57 @@ async def main():
             results = await crawler.arun("https://win.wwu.edu/events", config=config)
 
             print(f"Crawled {len(results)} pages in total")
-            print("\n" + "="*60)
 
-            all_events = []
+            all_events = [] # currently can have duplicate events. Will need to update after migrating to DB
 
-            # Process each result -- go through the events for each page
+            # Process the events for each page explored
             for i, result in enumerate(results):
+                # debugging
                 print(f"\nPage {i+1}:")
                 print(f"URL: {result.url}")
                 print(f"Depth: {result.metadata.get('depth', 0)}")
                 print(f"Success: {result.success}")
+                print(f"Contet: {result.extracted_content}")
 
-                content = json.loads(result.extracted_content)
-                print("content", content)
-                events_list = content[0]["events"]
-                if events_list:
-                    extracted_events = ExtractedEvents(events=events_list)
-                    all_events.extend(extracted_events.events)
-                    # for event in events_list:
-                    #     print("PROGRESSS")
-                    #     print(event)
-                    #     extracted_event = EventEntry(**event)
-                    #     all_events.append(extracted_event)
+                if bool(result.success) and result.extracted_content:
+                    # format events using pydantic model
+                    content = json.loads(result.extracted_content)
+                    events_list = content[0]["events"]
+                    if events_list:
+                        extracted_events = ExtractedEvents(events=events_list)
+                        all_events.extend(extracted_events.events)
 
+                    else:
+                        print("Did not find events on page")
                 else:
                     print("Did not find events on page")
-            
 
-
-
-            # Summary and detailed results
+                # Add a small delay to be respectful to the llm
+                await asyncio.sleep(1)
+            # Placeholder for future DB solution
             print("\n" + "="*60)
             print(f"SUMMARY: Found {len(all_events)} total events across all pages")
             print("="*60)
 
-            print(all_events)
             # Display all events
             if all_events:
-                for i, event in enumerate(all_events):
-                    print(f"\nEvent {i}:")
-                    print(f"  Name: {event.name}")
-                    print(f"  Date: {event.date}")
-                    print(f"  Location: {event.location}")
-                    print(f"  Source: {event.source_url}")
+                output_table = PrettyTable(["Event Name", "Event Date", "Event Location", "Source URL"])
+                for event in all_events:
+                    output_table.add_row([event.name, event.date, event.location, event.source_url])
+                with open(os.path.join(LOG_PATH, "events.txt"), "w") as f:
+                    f.write(output_table.get_string())
             else:
                 print("No events were extracted from any page.")
+
+            with open(os.path.join(LOG_PATH, "names.txt"), "w") as f:
+                for event in all_events:
+                    f.write(event.name, "\n")
 
             return all_events
 
         except Exception as e:
             print(f"Error during crawling: {e}")
+            traceback.print_exc()
             return []
 
 if __name__ == "__main__":
