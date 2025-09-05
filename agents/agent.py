@@ -1,14 +1,13 @@
 from langchain_core.tools import tool
-from dotenv import load_dotenv
 import os
+import sys
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
-from langchain.chat_models import init_chat_model
 from pydantic import BaseModel, Field
 from typing import Annotated, Literal, List, Optional
 from typing_extensions import TypedDict
-
-load_dotenv()
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.ollama_client import OllamaClient
 
 class UserQuery(BaseModel):
     topic: str  # main subject/domain (e.g., "NBA", "restaurants", "stocks")
@@ -27,8 +26,7 @@ class State(TypedDict):
 
 
 def init_llm():
-    model = init_chat_model("gemini-2.5-flash", model_provider="google_genai")
-    return model
+    return OllamaClient(model="llama3.2")
 
 
 def build_graph():
@@ -59,27 +57,24 @@ def choose_mode(state: State):
 
 def handle_user_input(state: State):
     last_message = state["messages"][-1]
-    extraction_llm = model.with_structured_output(UserQuery)
-    extracted_query = extraction_llm.invoke([
-        {
-            "role":"system",
-            "content": """You are an intent extraction engine.
-                Given a user query, extract and return the following fields:
+    
+    system_prompt = """You are an intent extraction engine.
+Given a user query, extract and return the following fields:
 
-                topic: str  # main subject/domain (e.g., "NBA", "restaurants", "stocks")
-                tasks: List[str]  # specific pieces of info requested (e.g., ["scores", "player stats"])
-                timeframe: Optional[str] = None  # natural language time (e.g., "last night", "next week")
-                location: Optional[str] = None   # if relevant (e.g., "Seattle", "NYC")
-                filters: Optional[List[str]] = None  # extra constraints (e.g., ["vegan", "under $20"])
-                raw_query: str  # original user query for traceability
-            """
-        },
-        {
-            "role": "user",
-            "content": last_message.content
-        }
+topic: str  # main subject/domain (e.g., "NBA", "restaurants", "stocks")
+tasks: List[str]  # specific pieces of info requested (e.g., ["scores", "player stats"])
+timeframe: Optional[str] = None  # natural language time (e.g., "last night", "next week")
+location: Optional[str] = None   # if relevant (e.g., "Seattle", "NYC")
+filters: Optional[List[str]] = None  # extra constraints (e.g., ["vegan", "under $20"])
+raw_query: str  # original user query for traceability
 
-    ])
+Return ONLY valid JSON matching this structure."""
+
+    extracted_query = model.extract_structured(
+        last_message.content, 
+        UserQuery, 
+        system_prompt
+    )
 
     return {"query": extracted_query}
 

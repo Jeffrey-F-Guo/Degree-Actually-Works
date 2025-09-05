@@ -1,19 +1,17 @@
 import asyncio
 from crawl4ai import AsyncWebCrawler
 import os
-from dotenv import load_dotenv
-from langchain.chat_models import init_chat_model
 from pydantic import BaseModel, Field
 from typing import List, Set
 import re
 from urllib.parse import urljoin, urlparse
 import logging
 from prettytable import PrettyTable
+from utils.ollama_client import OllamaClient
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-load_dotenv()
 
 
 class EventEntry(BaseModel):
@@ -76,7 +74,7 @@ async def crawl_deep(base_url: str, max_links: int = 10) -> List[tuple]:
             logger.info(f"Found {len(links)} links on base page")
 
             # Limit the number of links to crawl
-            links_to_crawl = list(event_links)[:max_links]
+            links_to_crawl = list(links)[:max_links]
 
             # Crawl each linked page
             for i, link in enumerate(links_to_crawl, 1):
@@ -101,53 +99,29 @@ async def crawl_deep(base_url: str, max_links: int = 10) -> List[tuple]:
 
 
 async def extract_events_from_content(crawled_content: List[tuple]) -> ExtractedEvents:
-    """Extract events from all crawled content using LLM."""
+    """Extract events from all crawled content using Ollama."""
 
-    model = init_chat_model("gemini-2.5-flash", model_provider="google_genai")
-    summary_llm = model.with_structured_output(ExtractedEvents)
-
+    ollama_client = OllamaClient(model="llama3.2")
     all_events = []
 
     for url, markdown_content in crawled_content:
         logger.info(f"Extracting events from: {url}")
 
         try:
-            # Add URL context to the content
-            content_with_source = f"Source URL: {url}\n\n{markdown_content}"
+            # Extract events using Ollama
+            events_data = ollama_client.extract_events(markdown_content, url)
+            
+            # Convert to EventEntry objects
+            for event_data in events_data.get("events", []):
+                event = EventEntry(
+                    event_name=event_data.get("event_name", ""),
+                    event_date=event_data.get("event_date", ""),
+                    location=event_data.get("location", ""),
+                    source_url=event_data.get("source_url", url)
+                )
+                all_events.append(event)
 
-            output = summary_llm.invoke([
-                {
-                    "role": "system",
-                    "content": """Your role is to extract event information from markdown content.
-                    Given markdown content from a webpage, extract and return a list of events.
-                    Each event should have the following fields:
-
-                    - event_name: The name/title of the event
-                    - event_date: The date and time of the event (keep original format)
-                    - location: Where the event is taking place
-                    - source_url: The URL where this event information was found
-
-                    If no events are found, return an empty list.
-                    Be thorough and look for any event-related information including:
-                    - Scheduled events, meetings, workshops
-                    - Performances, lectures, seminars
-                    - Social activities, sports events
-                    - Academic events, deadlines
-                    """
-                },
-                {
-                    "role": "user",
-                    "content": content_with_source
-                }
-            ])
-
-            # Add source URL to each event if not already present
-            for event in output.events:
-                if not event.source_url:
-                    event.source_url = url
-
-            all_events.extend(output.events)
-            logger.info(f"Found {len(output.events)} events from {url}")
+            logger.info(f"Found {len(events_data.get('events', []))} events from {url}")
 
         except Exception as e:
             logger.error(f"Failed to extract events from {url}: {str(e)}")
@@ -182,7 +156,7 @@ async def main():
     table = PrettyTable(["event_number", "name", "date", "location", "source_url"])
 
     for i, event in enumerate(all_events.events):
-        table.add_row(i, event.event_name, event.event_date, event.location, event.source_url)
+        table.add_row([i, event.event_name, event.event_date, event.location, event.source_url])
 
     with open("events.txt", "w") as f:
         f.write(table.get_string())

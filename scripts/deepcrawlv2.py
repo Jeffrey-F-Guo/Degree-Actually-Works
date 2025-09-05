@@ -1,18 +1,17 @@
 import asyncio
-from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, LLMConfig, MatchMode
+from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, MatchMode
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
-from crawl4ai.extraction_strategy import LLMExtractionStrategy
 from crawl4ai.deep_crawling.filters import FilterChain, DomainFilter, URLPatternFilter
 from pydantic import BaseModel, Field
 from typing import List
 import os
-from dotenv import load_dotenv
+import sys
 import json
 from prettytable import PrettyTable
 import traceback
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.ollama_client import OllamaClient
 
-load_dotenv()
-GEMINI_API_KEY = os.getenv('GOOGLE_API_KEY')
 LOG_PATH = "logs"
 class EventEntry(BaseModel):
     name: str
@@ -42,17 +41,7 @@ llm_prompt = """
 """
 
 async def main():
-    # Configure extraction strategy
-    llm_strategy = LLMExtractionStrategy(
-        llm_config=LLMConfig(
-            provider="gemini/gemini-2.5-flash",
-            api_token=GEMINI_API_KEY,
-        ),
-        extraction_type="schema",
-        input_format="markdown",
-        schema=ExtractedEvents.model_json_schema(),
-        instruction=llm_prompt
-    )
+    # Configure link filtering
     link_filter = FilterChain(
         filters = [
             DomainFilter(
@@ -71,7 +60,6 @@ async def main():
             max_pages=50,
             filter_chain = link_filter,
         ),
-        extraction_strategy=llm_strategy,
         verbose=True
     )
 
@@ -82,6 +70,7 @@ async def main():
             print(f"Crawled {len(results)} pages in total")
 
             all_events = [] # currently can have duplicate events. Will need to update after migrating to DB
+            ollama_client = OllamaClient(model="llama3.2")
 
             # Process the events for each page explored
             for i, result in enumerate(results):
@@ -90,16 +79,23 @@ async def main():
                 print(f"URL: {result.url}")
                 print(f"Depth: {result.metadata.get('depth', 0)}")
                 print(f"Success: {result.success}")
-                print(f"Contet: {result.extracted_content}")
 
-                if bool(result.success) and result.extracted_content:
-                    # format events using pydantic model
-                    content = json.loads(result.extracted_content)
-                    events_list = content[0]["events"]
+                if bool(result.success) and result.markdown:
+                    # Extract events using Ollama
+                    events_data = ollama_client.extract_events(result.markdown, result.url)
+                    events_list = events_data.get("events", [])
+                    
                     if events_list:
-                        extracted_events = ExtractedEvents(events=events_list)
-                        all_events.extend(extracted_events.events)
-
+                        # Convert to EventEntry objects
+                        for event_data in events_list:
+                            event = EventEntry(
+                                name=event_data.get("event_name", ""),
+                                date=event_data.get("event_date", ""),
+                                location=event_data.get("location", ""),
+                                source_url=event_data.get("source_url", result.url)
+                            )
+                            all_events.append(event)
+                        print(f"Found {len(events_list)} events on page")
                     else:
                         print("Did not find events on page")
                 else:

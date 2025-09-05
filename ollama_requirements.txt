@@ -1,0 +1,14 @@
+# Core dependencies for Ollama-based web scraping
+crawl4ai
+pydantic
+prettytable
+requests
+
+# Optional: for better JSON handling and validation
+jsonschema
+
+# Note: No longer need these Gemini/LangChain dependencies:
+# - langchain
+# - langchain-google-genai
+# - google-generativeai
+# - dotenv (no longer needed for API keys)

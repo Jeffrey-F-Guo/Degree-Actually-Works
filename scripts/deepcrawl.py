@@ -1,20 +1,19 @@
 import asyncio
 from crawl4ai import AsyncWebCrawler
 import os
-from dotenv import load_dotenv
-from langchain.chat_models import init_chat_model
+import sys
 from pydantic import BaseModel, Field
 from typing import List, Set
 import re
 from urllib.parse import urljoin, urlparse
 import logging
-from  prettytable import PrettyTable
+from prettytable import PrettyTable
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.ollama_client import OllamaClient
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-load_dotenv()
 
 
 class EventEntry(BaseModel):
@@ -103,53 +102,29 @@ async def crawl_deep(base_url: str, max_links: int = 10) -> List[tuple]:
 
 
 async def extract_events_from_content(crawled_content: List[tuple]) -> ExtractedEvents:
-    """Extract events from all crawled content using LLM."""
+    """Extract events from all crawled content using Ollama."""
 
-    model = init_chat_model("gemini-2.5-flash", model_provider="google_genai")
-    summary_llm = model.with_structured_output(ExtractedEvents)
-
+    ollama_client = OllamaClient(model="llama3.2")
     all_events = []
 
     for url, markdown_content in crawled_content:
         logger.info(f"Extracting events from: {url}")
 
         try:
-            # Add URL context to the content
-            content_with_source = f"Source URL: {url}\n\n{markdown_content}"
+            # Extract events using Ollama
+            events_data = ollama_client.extract_events(markdown_content, url)
+            
+            # Convert to EventEntry objects (note: this script uses 'name' instead of 'event_name')
+            for event_data in events_data.get("events", []):
+                event = EventEntry(
+                    name=event_data.get("event_name", ""),
+                    date=event_data.get("event_date", ""),
+                    location=event_data.get("location", ""),
+                    source_url=event_data.get("source_url", url)
+                )
+                all_events.append(event)
 
-            output = summary_llm.invoke([
-                {
-                    "role": "system",
-                    "content": """Your role is to extract event information from markdown content.
-                    Given markdown content from a webpage, extract and return a list of events.
-                    Each event should have the following fields:
-
-                    - event_name: The name/title of the event
-                    - event_date: The date and time of the event (keep original format)
-                    - location: Where the event is taking place
-                    - source_url: The URL where this event information was found
-
-                    If no events are found, return an empty list.
-                    Be thorough and look for any event-related information including:
-                    - Scheduled events, meetings, workshops
-                    - Performances, lectures, seminars
-                    - Social activities, sports events
-                    - Academic events, deadlines
-                    """
-                },
-                {
-                    "role": "user",
-                    "content": content_with_source
-                }
-            ])
-
-            # Add source URL to each event if not already present
-            for event in output.events:
-                if not event.source_url:
-                    event.source_url = url
-
-            all_events.extend(output.events)
-            logger.info(f"Found {len(output.events)} events from {url}")
+            logger.info(f"Found {len(events_data.get('events', []))} events from {url}")
 
         except Exception as e:
             logger.error(f"Failed to extract events from {url}: {str(e)}")

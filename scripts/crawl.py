@@ -1,12 +1,11 @@
 import asyncio
 from crawl4ai import AsyncWebCrawler
 import os
-from dotenv import load_dotenv
-from langchain.chat_models import init_chat_model
+import sys
 from pydantic import BaseModel, Field
 from typing import List
-
-load_dotenv()
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.ollama_client import OllamaClient
 
 
 async def crawl():
@@ -32,25 +31,21 @@ class ExtractedEvents(BaseModel):
     events: List[EventEntry] = Field(..., description="A list of events with their details.")
 
 
-model = init_chat_model("gemini-2.5-flash", model_provider="google_genai")
+# Extract events using Ollama
+ollama_client = OllamaClient(model="llama3.2")
+events_data = ollama_client.extract_events(result.markdown)
 
-summary_llm = model.with_structured_output(ExtractedEvents)
-output = summary_llm.invoke([
-    {
-        "role": "system",
-        "content": """Your role is to extract information from a markdown file.
-                Given a markdown file, extract and return a list of events. Each event should have the following fields:
+# Convert to ExtractedEvents object
+events = []
+for event_data in events_data.get("events", []):
+    event = EventEntry(
+        event_name=event_data.get("event_name", ""),
+        event_date=event_data.get("event_date", ""),
+        location=event_data.get("location", "")
+    )
+    events.append(event)
 
-                    event_name: str
-                    event_date:str
-                    location: str
-        """
-    },
-    {
-        "role": "user",
-        "content": result.markdown
-    }
-])
+output = ExtractedEvents(events=events)
 
 # print(result.markdown)
 print(output)
