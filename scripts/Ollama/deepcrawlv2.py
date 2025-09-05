@@ -84,7 +84,7 @@ async def main():
                     # Extract events using Ollama
                     events_data = ollama_client.extract_events(result.markdown, result.url)
                     events_list = events_data.get("events", [])
-                    
+
                     if events_list:
                         # Convert to EventEntry objects
                         for event_data in events_list:
@@ -131,3 +131,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
