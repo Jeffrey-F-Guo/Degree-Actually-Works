@@ -107,24 +107,8 @@ async def main():
 
                 # Add a small delay to be respectful to the llm
                 await asyncio.sleep(1)
-            # Placeholder for future DB solution
-            print("\n" + "="*60)
-            print(f"SUMMARY: Found {len(all_events)} total events across all pages")
-            print("="*60)
 
-            # Display all events
-            if all_events:
-                output_table = PrettyTable(["Event Name", "Event Date", "Event Location", "Source URL"])
-                for event in all_events:
-                    output_table.add_row([event.name, event.date, event.location, event.source_url])
-                with open(os.path.join("..", LOG_PATH, "eventsDFS.txt"), "w") as f:
-                    f.write(output_table.get_string())
-
-                with open(os.path.join("..", LOG_PATH, "namesDFS.txt"), "w") as f:
-                    for event in all_events:
-                        f.write(f"{event.name}\n")
-            else:
-                print("No events were extracted from any page.")
+            write_to_db(all_events)
 
             return all_events
 
@@ -132,6 +116,28 @@ async def main():
             print(f"Error during crawling: {e}")
             traceback.print_exc()
             return []
+
+def write_to_db(all_data):
+    # Placeholder for future DB solution
+    print("\n" + "="*60)
+    print(f"SUMMARY: Found {len(all_data)} total events across all pages")
+    print("="*60)
+
+    # Display all events
+    if all_data:
+        output_table = PrettyTable(["Event Name", "Event Date", "Event Location", "Source URL"])
+        for event in all_data:
+            output_table.add_row([event.name, event.date, event.location, event.source_url])
+        with open(os.path.join("..", LOG_PATH, "eventsDFS.txt"), "w") as f:
+            f.write(output_table.get_string())
+
+        # display names in separate file -- only for testing
+        with open(os.path.join("..", LOG_PATH, "namesDFS.txt"), "w") as f:
+            for event in all_data:
+                f.write(f"{event.name}\n")
+    else:
+        print("No events were extracted from any page.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
