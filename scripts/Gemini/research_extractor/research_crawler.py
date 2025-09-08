@@ -30,6 +30,7 @@ class FacultyResearchExtractor:
         Return:
             List of absolute URLS to individual professor pages.
         """
+        logger.info("Extracting faculty urls.")
         if department_code not in self.BASE_URLS or department_code not in self.FACULTY_URLS:
             raise ValueError(f"{department_code} is not a valid department at WWU.")
 
@@ -65,7 +66,7 @@ class FacultyResearchExtractor:
         Return:
             Dictionary of extracted information.
         """
-
+        logger.info("Extracting professor information.")
         schema = self._get_professor_profile_schema()
         extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
         config = CrawlerRunConfig(
@@ -165,7 +166,7 @@ async def extract_research_by_department(department_code: str) -> None:
     """
     extractor = FacultyResearchExtractor()
     research_data = await extractor.extract_department_research(department_code)
-    print(research_data)
+    logger.info(research_data)
     return
 
 if __name__ == "__main__":
