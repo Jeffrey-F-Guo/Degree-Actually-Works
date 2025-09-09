@@ -1,4 +1,7 @@
+# Core dependencies
 crawl4ai
-dotenv
+python-dotenv
 pydantic
 prettytable
+
+numpy < 2

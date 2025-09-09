@@ -5,7 +5,7 @@ import os
 from urllib.parse import urljoin, urlparse
 from typing import List, Dict
 import logging
-
+import csv
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -108,6 +108,31 @@ class FacultyResearchExtractor:
 
         return research_info
 
+    def write_research_to_csv(self, research_data: List[Dict], filename: str = "faculty_research.csv"):
+        """
+        Writes extracted research information to a CSV file.
+
+        Args:
+            research_data: List of dictionaries containing professor info.
+            filename: Name of the CSV file to write to.
+        """
+        if not research_data:
+            logger.warning("No research data to write.")
+            return
+
+        # Determine the CSV headers from keys of the first dictionary
+        headers = research_data[0].keys()
+
+        try:
+            with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=headers)
+                writer.writeheader()
+                for row in research_data:
+                    writer.writerow(row)
+            logger.info(f"Research data written to {filename}")
+        except Exception as e:
+            logger.error(f"Failed to write CSV: {e}")
+
     def _get_professor_profile_schema(self) -> Dict:
         """
         CSS extraction schema for extracting professor information from professor profile pages.
@@ -166,6 +191,8 @@ async def extract_research_by_department(department_code: str) -> None:
     """
     extractor = FacultyResearchExtractor()
     research_data = await extractor.extract_department_research(department_code)
+    if research_data:
+        extractor.write_research_to_csv(research_data)
     logger.info(research_data)
     return
 
