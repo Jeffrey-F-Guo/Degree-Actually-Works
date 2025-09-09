@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  research-extractor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: research-extractor
+    restart: unless-stopped
+    volumes:
+      # Mount a volume for logs (optional)
+      - ./logs:/app/logs
+    environment:
+      # Add any environment variables your app needs
+      - PYTHONUNBUFFERED=1
+
+    # For one-time runs (which is typical for this scraping script)
+    # Remove 'restart: unless-stopped' and add this if you want it to run once and stop
+    # restart: "no"
+
+    # Uncomment if you add a web interface later
+    # ports:
+    #   - "8000:8000"
+
+    # The container will run research_crawler.py by default as defined in Dockerfile

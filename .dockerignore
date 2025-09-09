@@ -1,20 +1,77 @@
-# Python artifacts
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Documentation
+README.md
+*.md
+
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
 # Virtual environments
-.venv
-env/
+.venv/
 venv/
+ENV/
+env/
+.env
 
-# OS / IDE
-.DS_Store
-.idea/
+# IDE
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Local dev files
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
 logs/
 *.log
-.env
+
+# Other folders not needed in the container
+docker/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Exclude other scripts folders we don't need
+scripts/agents/
+scripts/docker/
+scripts/utils/
+scripts/web_scraping/
+
+# Keep only the Gemini/research_extractor path we need
