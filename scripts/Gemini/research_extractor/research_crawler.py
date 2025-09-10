@@ -91,10 +91,11 @@ class FacultyResearchExtractor:
         research_info = []
         async with AsyncWebCrawler() as crawler:
             professor_info_list = await crawler.arun_many(url_list, config=config)
-            for professor_info in professor_info_list:
+            for i, professor_info in enumerate(professor_info_list):
                 if professor_info.extracted_content:
                     professor_data = json.loads(professor_info.extracted_content)
                     if professor_data:
+                        professor_data[0]["src_url"] = url_list[i]
                         research_info.append(professor_data[0])
         return research_info
 
@@ -121,7 +122,8 @@ class FacultyResearchExtractor:
         #         research_info.append(professor_info)
         #     else:
         #         logger.warning(f"Could not extract information at: {url}")
-
+        if research_info:
+            self.write_research_to_csv(research_info)
         return research_info
 
     def write_research_to_csv(self, research_data: List[Dict], filename: str = "faculty_research.csv"):
@@ -161,17 +163,20 @@ class FacultyResearchExtractor:
                     "name": "professor_name",
                     "selector": "h1.field-content",
                     "type": "text",
+                    "default": "None"
                 },
                 {
                     "name": "website",
                     "selector": "div.website a",
                     "type": "attribute",
-                    "attribute": "href"
+                    "attribute": "href",
+                    "default": "None"
                 },
                 {
                     "name": "research_interest",
                     "selector": "h2.views-label-field-research-interests+p",
                     "type": "text",
+                    "default": "None"
                 },
             ]
         }
@@ -206,10 +211,7 @@ async def extract_research_by_department(department_code: str) -> None:
         List of professor research information
     """
     extractor = FacultyResearchExtractor()
-    research_data = await extractor.extract_department_research(department_code)
-    if research_data:
-        extractor.write_research_to_csv(research_data)
-    logger.info(research_data)
+    await extractor.extract_department_research(department_code)
     return
 
 if __name__ == "__main__":
