@@ -82,6 +82,22 @@ class FacultyResearchExtractor:
 
             return None
 
+    async def extract_multiple_professor_information(self, url_list):
+        schema = self._get_professor_profile_schema()
+        extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
+        config = CrawlerRunConfig(
+            extraction_strategy=extraction_strategy,
+        )
+        research_info = []
+        async with AsyncWebCrawler() as crawler:
+            professor_info_list = await crawler.arun_many(url_list, config=config)
+            for professor_info in professor_info_list:
+                if professor_info.extracted_content:
+                    professor_data = json.loads(professor_info.extracted_content)
+                    if professor_data:
+                        research_info.append(professor_data[0])
+        return research_info
+
     async def extract_department_research(self, department_code) -> List[dict]:
         """
         Extracts research information and more from all professors in a department.
@@ -98,13 +114,13 @@ class FacultyResearchExtractor:
             logger.warning(f"No faculty URLs found for department: {department_code}")
             return []
 
-        research_info = []
-        for url in faculty_urls:
-            professor_info = await self.extract_professor_information(url)
-            if professor_info:
-                research_info.append(professor_info)
-            else:
-                logger.warning(f"Could not extract information at: {url}")
+        research_info = await self.extract_multiple_professor_information(faculty_urls)
+        # for url in faculty_urls:
+        #     professor_info = await self.extract_professor_information(url)
+        #     if professor_info:
+        #         research_info.append(professor_info)
+        #     else:
+        #         logger.warning(f"Could not extract information at: {url}")
 
         return research_info
 
