@@ -5,7 +5,7 @@ import os
 from urllib.parse import urljoin, urlparse
 from typing import List, Dict
 import logging
-
+import csv
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,6 +30,7 @@ class FacultyResearchExtractor:
         Return:
             List of absolute URLS to individual professor pages.
         """
+        logger.info("Extracting faculty urls.")
         if department_code not in self.BASE_URLS or department_code not in self.FACULTY_URLS:
             raise ValueError(f"{department_code} is not a valid department at WWU.")
 
@@ -65,7 +66,7 @@ class FacultyResearchExtractor:
         Return:
             Dictionary of extracted information.
         """
-
+        logger.info("Extracting professor information.")
         schema = self._get_professor_profile_schema()
         extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
         config = CrawlerRunConfig(
@@ -80,6 +81,22 @@ class FacultyResearchExtractor:
                     return professor_data[0]
 
             return None
+
+    async def extract_multiple_professor_information(self, url_list):
+        schema = self._get_professor_profile_schema()
+        extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
+        config = CrawlerRunConfig(
+            extraction_strategy=extraction_strategy,
+        )
+        research_info = []
+        async with AsyncWebCrawler() as crawler:
+            professor_info_list = await crawler.arun_many(url_list, config=config)
+            for professor_info in professor_info_list:
+                if professor_info.extracted_content:
+                    professor_data = json.loads(professor_info.extracted_content)
+                    if professor_data:
+                        research_info.append(professor_data[0])
+        return research_info
 
     async def extract_department_research(self, department_code) -> List[dict]:
         """
@@ -97,15 +114,40 @@ class FacultyResearchExtractor:
             logger.warning(f"No faculty URLs found for department: {department_code}")
             return []
 
-        research_info = []
-        for url in faculty_urls:
-            professor_info = await self.extract_professor_information(url)
-            if professor_info:
-                research_info.append(professor_info)
-            else:
-                logger.warning(f"Could not extract information at: {url}")
+        research_info = await self.extract_multiple_professor_information(faculty_urls)
+        # for url in faculty_urls:
+        #     professor_info = await self.extract_professor_information(url)
+        #     if professor_info:
+        #         research_info.append(professor_info)
+        #     else:
+        #         logger.warning(f"Could not extract information at: {url}")
 
         return research_info
+
+    def write_research_to_csv(self, research_data: List[Dict], filename: str = "faculty_research.csv"):
+        """
+        Writes extracted research information to a CSV file.
+
+        Args:
+            research_data: List of dictionaries containing professor info.
+            filename: Name of the CSV file to write to.
+        """
+        if not research_data:
+            logger.warning("No research data to write.")
+            return
+
+        # Determine the CSV headers from keys of the first dictionary
+        headers = research_data[0].keys()
+
+        try:
+            with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=headers)
+                writer.writeheader()
+                for row in research_data:
+                    writer.writerow(row)
+            logger.info(f"Research data written to {filename}")
+        except Exception as e:
+            logger.error(f"Failed to write CSV: {e}")
 
     def _get_professor_profile_schema(self) -> Dict:
         """
@@ -165,7 +207,9 @@ async def extract_research_by_department(department_code: str) -> None:
     """
     extractor = FacultyResearchExtractor()
     research_data = await extractor.extract_department_research(department_code)
-    print(research_data)
+    if research_data:
+        extractor.write_research_to_csv(research_data)
+    logger.info(research_data)
     return
 
 if __name__ == "__main__":
