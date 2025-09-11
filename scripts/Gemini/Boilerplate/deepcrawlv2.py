@@ -66,7 +66,7 @@ async def main():
     # Configure a 1-level deep crawl (depth=1 means one level deep)
     config = CrawlerRunConfig(
         deep_crawl_strategy=BFSDeepCrawlStrategy(
-            max_depth=2,
+            max_depth=1,
             include_external=False,
             max_pages=50,
             filter_chain = link_filter,
@@ -128,11 +128,11 @@ def write_to_db(all_data):
         output_table = PrettyTable(["Event Name", "Event Date", "Event Location", "Source URL"])
         for event in all_data:
             output_table.add_row([event.name, event.date, event.location, event.source_url])
-        with open(os.path.join("..", LOG_PATH, "eventsDFS.txt"), "w") as f:
+        with open(os.path.join("..", LOG_PATH, "events.txt"), "w") as f:
             f.write(output_table.get_string())
 
         # display names in separate file -- only for testing
-        with open(os.path.join("..", LOG_PATH, "namesDFS.txt"), "w") as f:
+        with open(os.path.join("..", LOG_PATH, "names.txt"), "w") as f:
             for event in all_data:
                 f.write(f"{event.name}\n")
     else:
