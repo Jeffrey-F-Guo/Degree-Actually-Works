@@ -1,5 +1,5 @@
 import asyncio
-from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, JsonCssExtractionStrategy
+from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, JsonCssExtractionStrategy, BrowserConfig
 import json
 import os
 from urllib.parse import urljoin, urlparse
@@ -20,7 +20,7 @@ class FacultyResearchExtractor:
             "CSCI": "https://cs.wwu.edu/faculty"
         }
 
-    async def extract_faculty_urls(self, department_code:str) -> List[str]:
+    async def extract_faculty_urls(self, department_code:str, debug_mode: bool) -> List[str]:
         """
         Extracts all professor profile URLS from a department's faculty page.
 
@@ -34,6 +34,7 @@ class FacultyResearchExtractor:
         if department_code not in self.BASE_URLS or department_code not in self.FACULTY_URLS:
             raise ValueError(f"{department_code} is not a valid department at WWU.")
 
+        browser_config = BrowserConfig(headless=not debug_mode)
         schema = self._get_faculty_page_schema()
         extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
         config = CrawlerRunConfig(
@@ -43,7 +44,8 @@ class FacultyResearchExtractor:
         base_url = self.BASE_URLS["CSCI"]
         faculty_url = self.FACULTY_URLS["CSCI"]
 
-        async with AsyncWebCrawler() as crawler:
+
+        async with AsyncWebCrawler(config=browser_config) as crawler:
             results = await crawler.arun(faculty_url, config=config)
             if not results.extracted_content:
                 logger.warning(f"No content extracted from {faculty_url}.")
@@ -82,14 +84,15 @@ class FacultyResearchExtractor:
 
             return None
 
-    async def extract_multiple_professor_information(self, url_list):
+    async def extract_multiple_professor_information(self, url_list, debug_mode):
+        browser_config = BrowserConfig(headless= not debug_mode)
         schema = self._get_professor_profile_schema()
         extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
         config = CrawlerRunConfig(
             extraction_strategy=extraction_strategy,
         )
         research_info = []
-        async with AsyncWebCrawler() as crawler:
+        async with AsyncWebCrawler(config=browser_config) as crawler:
             professor_info_list = await crawler.arun_many(url_list, config=config)
             for i, professor_info in enumerate(professor_info_list):
                 if professor_info.extracted_content:
@@ -99,7 +102,7 @@ class FacultyResearchExtractor:
                         research_info.append(professor_data[0])
         return research_info
 
-    async def extract_department_research(self, department_code) -> List[dict]:
+    async def extract_department_research(self, department_code, debug_mode=False) -> List[dict]:
         """
         Extracts research information and more from all professors in a department.
 
@@ -115,7 +118,7 @@ class FacultyResearchExtractor:
             logger.warning(f"No faculty URLs found for department: {department_code}")
             return []
 
-        research_info = await self.extract_multiple_professor_information(faculty_urls)
+        research_info = await self.extract_multiple_professor_information(faculty_urls, debug_mode)
         # for url in faculty_urls:
         #     professor_info = await self.extract_professor_information(url)
         #     if professor_info:
@@ -200,7 +203,7 @@ class FacultyResearchExtractor:
 
 
 # Usage functions
-async def extract_research_by_department(department_code: str) -> None:
+async def extract_research_by_department(department_code: str, debug_mode: bool) -> None:
     """
     Main function to extract research information for a specific department.
 
@@ -211,8 +214,8 @@ async def extract_research_by_department(department_code: str) -> None:
         List of professor research information
     """
     extractor = FacultyResearchExtractor()
-    await extractor.extract_department_research(department_code)
+    await extractor.extract_department_research(department_code, debug_mode)
     return
 
 if __name__ == "__main__":
-    asyncio.run(extract_research_by_department("CSCI"))
+    asyncio.run(extract_research_by_department("CSCI", debug_mode=True))
