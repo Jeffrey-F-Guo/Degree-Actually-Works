@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from research_crawler import FacultyResearchExtractor
+from research_crawler import extract_research_by_department
 import logging
 
 # Configure logging
@@ -13,8 +13,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Create a single, reusable instance of your extractor
-extractor = FacultyResearchExtractor()
+
 
 @app.get("/")
 async def read_root():
@@ -34,7 +33,7 @@ async def extract_research(department_code: str):
     logger.info(f"Received request to extract research for department: {department_code}")
     try:
         # Use the existing async method from your class
-        research_data = await extractor.extract_department_research(department_code, debug_mode=False)
+        research_data = await extract_research_by_department(department_code, debug_mode=False, write_to_csv=True)
 
         if not research_data:
             logger.warning(f"No data found for department: {department_code}")
