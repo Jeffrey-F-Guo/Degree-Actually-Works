@@ -12,15 +12,19 @@ logger = logging.getLogger(__name__)
 
 class FacultyResearchExtractor:
     def __init__(self):
+        # base path for all professor pages by department
         self.BASE_URLS = {
-            "CSCI": "https://cs.wwu.edu"
+            "CSCI": "https://cs.wwu.edu",
+            "BIO": "https://biology.wwu.edu/people",
         }
 
+        # main faculty page for each department
         self.FACULTY_URLS = {
-            "CSCI": "https://cs.wwu.edu/faculty"
+            "CSCI": "https://cs.wwu.edu/faculty",
+            "BIO": "https://biology.wwu.edu/directory/faculty",
         }
 
-    async def extract_faculty_urls(self, department_code:str, debug_mode: bool) -> List[str]:
+    async def extract_faculty_urls(self, department_code:str, debug_mode: bool=False) -> List[str]:
         """
         Extracts all professor profile URLS from a department's faculty page.
 
@@ -34,17 +38,19 @@ class FacultyResearchExtractor:
         if department_code not in self.BASE_URLS or department_code not in self.FACULTY_URLS:
             raise ValueError(f"{department_code} is not a valid department at WWU.")
 
-        browser_config = BrowserConfig(headless=not debug_mode)
+        # config crawler
+        browser_config = BrowserConfig(headless=(not debug_mode))
         schema = self._get_faculty_page_schema()
         extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
         config = CrawlerRunConfig(
             extraction_strategy=extraction_strategy,
         )
 
-        base_url = self.BASE_URLS["CSCI"]
-        faculty_url = self.FACULTY_URLS["CSCI"]
+        # Select url paths by department
+        base_url = self.BASE_URLS[department_code]
+        faculty_url = self.FACULTY_URLS[department_code]
 
-
+        # Run crawler
         async with AsyncWebCrawler(config=browser_config) as crawler:
             results = await crawler.arun(faculty_url, config=config)
             if not results.extracted_content:
@@ -54,6 +60,7 @@ class FacultyResearchExtractor:
             all_pages = []
             pages = json.loads(results.extracted_content)
             for page in pages:
+                # Crawled page provides relative urls like '/wolterp'. Join the base url to create an absolute url
                 absolute_url = urljoin(base_url, page["professor_page_url"])
                 all_pages.append(absolute_url)
             return all_pages
@@ -84,8 +91,8 @@ class FacultyResearchExtractor:
 
             return None
 
-    async def extract_multiple_professor_information(self, url_list, debug_mode):
-        browser_config = BrowserConfig(headless= not debug_mode)
+    async def extract_multiple_professor_information(self, url_list: List, debug_mode: bool=False):
+        browser_config = BrowserConfig(headless= (not debug_mode))
         schema = self._get_professor_profile_schema()
         extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
         config = CrawlerRunConfig(
@@ -113,12 +120,12 @@ class FacultyResearchExtractor:
             List dictionaries containing all professors' research information.
         """
 
-        faculty_urls = await self.extract_faculty_urls(department_code)
+        faculty_urls = await self.extract_faculty_urls(department_code, debug_mode=debug_mode)
         if not faculty_urls:
             logger.warning(f"No faculty URLs found for department: {department_code}")
             return []
 
-        research_info = await self.extract_multiple_professor_information(faculty_urls, debug_mode)
+        research_info = await self.extract_multiple_professor_information(faculty_urls, debug_mode=debug_mode)
         # for url in faculty_urls:
         #     professor_info = await self.extract_professor_information(url)
         #     if professor_info:
@@ -126,10 +133,10 @@ class FacultyResearchExtractor:
         #     else:
         #         logger.warning(f"Could not extract information at: {url}")
         if research_info:
-            self.write_research_to_csv(research_info)
+            self.write_research_to_csv(research_info, department_code)
         return research_info
 
-    def write_research_to_csv(self, research_data: List[Dict], filename: str = "faculty_research.csv"):
+    def write_research_to_csv(self, research_data: List[Dict], department_code: str):
         """
         Writes extracted research information to a CSV file.
 
@@ -145,6 +152,7 @@ class FacultyResearchExtractor:
         headers = research_data[0].keys()
 
         try:
+            filename = f"{department_code}.csv"
             with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=headers)
                 writer.writeheader()
@@ -154,6 +162,7 @@ class FacultyResearchExtractor:
         except Exception as e:
             logger.error(f"Failed to write CSV: {e}")
 
+    # TODO: doesnt work universally for professor pages across all departments, only CSCI
     def _get_professor_profile_schema(self) -> Dict:
         """
         CSS extraction schema for extracting professor information from professor profile pages.
@@ -203,7 +212,7 @@ class FacultyResearchExtractor:
 
 
 # Usage functions
-async def extract_research_by_department(department_code: str, debug_mode: bool) -> None:
+async def extract_research_by_department(department_code: str, debug_mode: bool=False) -> None:
     """
     Main function to extract research information for a specific department.
 
@@ -218,4 +227,4 @@ async def extract_research_by_department(department_code: str, debug_mode: bool)
     return
 
 if __name__ == "__main__":
-    asyncio.run(extract_research_by_department("CSCI", debug_mode=True))
+    asyncio.run(extract_research_by_department("BIO", debug_mode=True))

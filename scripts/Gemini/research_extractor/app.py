@@ -34,7 +34,7 @@ async def extract_research(department_code: str):
     logger.info(f"Received request to extract research for department: {department_code}")
     try:
         # Use the existing async method from your class
-        research_data = await extractor.extract_department_research(department_code)
+        research_data = await extractor.extract_department_research(department_code, debug_mode=False)
 
         if not research_data:
             logger.warning(f"No data found for department: {department_code}")
