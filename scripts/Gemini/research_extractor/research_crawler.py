@@ -6,6 +6,10 @@ from urllib.parse import urljoin, urlparse
 from typing import List, Dict
 import logging
 import csv
+from pydantic import BaseModel, Field
+from langchain_core.prompts import ChatPromptTemplate
+from langchain.chat_models import init_chat_model
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -14,13 +18,29 @@ logger = logging.getLogger(__name__)
 BASE_URLS = {
     "CSCI": "https://cs.wwu.edu",
     "BIO": "https://biology.wwu.edu/people",
+    "MATH": "https://mathematics.wwu.edu/people"
 }
 
 # main faculty page for each department
 FACULTY_URLS = {
     "CSCI": "https://cs.wwu.edu/faculty",
     "BIO": "https://biology.wwu.edu/directory/faculty",
+    "MATH": "https://mathematics.wwu.edu/directory",
 }
+
+
+class ProfessorPage(BaseModel):
+    name: str = Field(..., description="Professor's name")
+    website: str = Field("N/A", description="Professor's personal website")
+    research_interest: List[str] = Field(default_factory=list, description="List of professor's research interests")
+
+def init_llm( prompt_template, model="gemini-2.5-flash", model_provider="google-genai"):
+    llm = init_chat_model(model=model, model_provider=model_provider)
+    structured_llm = llm.with_structured_output(ProfessorPage)
+    llm_chain = prompt_template | structured_llm
+
+    return llm_chain
+
 
 async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> List[str]:
     """
@@ -55,58 +75,56 @@ async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> L
             logger.warning(f"No content extracted from {faculty_url}.")
             return []
 
-        all_pages = []
+        all_pages = set()
         pages = json.loads(results.extracted_content)
         for page in pages:
             # Crawled page provides relative urls like '/wolterp'. Join the base url to create an absolute url
             absolute_url = urljoin(base_url, page["professor_page_url"])
-            all_pages.append(absolute_url)
-        return all_pages
+            all_pages.add(absolute_url)
+        return list(all_pages)
 
-async def extract_professor_information(page_url: str) -> Dict:
-    """
-    Extracts all professor information on their profile page. Extracted information includes name, website, and research interests.
+"""
+*special instructions for research_interest*: first check the page for a research interest section.
+If not on the page, make sure to check the publication section
+to determine professor research interest.
+"""
+async def extract_professor_information(url_list: List, debug_mode: bool=False):
+    prompt_template = ChatPromptTemplate.from_messages([
+        {
+            "role": "system",
+            "content": """Your role is to extract information from a markdown file.
+                    Given a markdown file, extract and return a list. Each event represents a prefoessor's web page
+                    and should have the following fields:
 
-    Args:
-        page_url: URL to professor's page. This is the page to extract information from.
+                        name: str
+                        website: str (optional)
+                        research_interest: list (optional) *important note: this must be academic interest. Only record research interests if they are under the research interests section. If there is no research section, leave the list empty*
 
-    Return:
-        Dictionary of extracted information.
-    """
-    logger.info("Extracting professor information.")
-    schema = _get_professor_profile_schema()
-    extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
-    config = CrawlerRunConfig(
-        extraction_strategy=extraction_strategy,
-    )
-
-    async with AsyncWebCrawler() as crawler:
-        result = await crawler.arun(page_url, config=config)
-        if result.extracted_content:
-            professor_data = json.loads(result.extracted_content)
-            if professor_data:
-                professor_data[0]["prof_url"] = page_url
-                return professor_data[0]
-
-        return None
-
-async def extract_multiple_professor_information(url_list: List, debug_mode: bool=False):
+            """
+        },
+        {
+            "role": "user",
+            "content": "{markdown}"
+        }
+    ])
+    llm_chain = init_llm(prompt_template)
     browser_config = BrowserConfig(headless= (not debug_mode))
-    schema = _get_professor_profile_schema()
-    extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
-    config = CrawlerRunConfig(
-        extraction_strategy=extraction_strategy,
-    )
     research_info = []
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
-        professor_info_list = await crawler.arun_many(url_list, config=config)
+        # returns a list of crawlerrun objects
+        professor_info_list = await crawler.arun_many(url_list)
         for i, professor_info in enumerate(professor_info_list):
-            if professor_info.extracted_content:
-                professor_data = json.loads(professor_info.extracted_content)
-                if professor_data:
-                    professor_data[0]["src_url"] = url_list[i]
-                    research_info.append(professor_data[0])
+            if professor_info.markdown:
+                try: # catch llm errors
+                    data = llm_chain.invoke({"markdown": professor_info.markdown})
+                    if data:
+                        professor_data = data.model_dump()
+                        if professor_data:
+                            professor_data["src_url"] = professor_info.url
+                            research_info.append(professor_data)
+                except Exception as e:
+                    logger.error(f"Failed to extract info from {url_list[i]}: {e}")
     return research_info
 
 async def extract_department_research(department_code, debug_mode=False) -> List[dict]:
@@ -125,7 +143,7 @@ async def extract_department_research(department_code, debug_mode=False) -> List
         logger.warning(f"No faculty URLs found for department: {department_code}")
         return []
 
-    research_info = await extract_multiple_professor_information(faculty_urls, debug_mode=debug_mode)
+    research_info = await extract_professor_information(faculty_urls, debug_mode=debug_mode)
     return research_info
 
 def write_research_to_csv(research_data: List[Dict], department_code: str):
@@ -203,7 +221,7 @@ def _get_faculty_page_schema() -> Dict:
     }
 
 
-# Usage functions
+# 'public' wrapper. Other files import this function
 async def extract_research_by_department(department_code: str, debug_mode: bool=False, write_to_csv: bool = False) -> None:
     """
     Main function to extract research information for a specific department.
@@ -221,4 +239,5 @@ async def extract_research_by_department(department_code: str, debug_mode: bool=
     return research_info
 
 if __name__ == "__main__":
-    asyncio.run(extract_research_by_department("BIO", debug_mode=True, write_to_csv=True))
+    asyncio.run(extract_research_by_department("MATH", debug_mode=True, write_to_csv=True))
+    # asyncio.run(extract_professor_information(["https://cs.wwu.edu/harri267"], True))
