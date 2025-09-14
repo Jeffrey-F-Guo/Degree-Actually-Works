@@ -162,7 +162,7 @@ def write_research_to_csv(research_data: List[Dict], department_code: str):
     headers = research_data[0].keys()
 
     try:
-        filename = f"{department_code}.csv"
+        filename = f"{department_code}_research.csv"
         with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=headers)
             writer.writeheader()
