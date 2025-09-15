@@ -1,0 +1,13 @@
+# Core dependencies for courses extractor
+crawl4ai
+python-dotenv
+pydantic
+prettytable
+fastapi
+uvicorn[standard]
+langchain
+langchain-google-genai
+datetime
+python-dateutil
+numpy < 2
+pandas

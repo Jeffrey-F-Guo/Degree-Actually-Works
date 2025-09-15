@@ -7,8 +7,9 @@ from langchain.chat_models import init_chat_model
 from pydantic import BaseModel, Field
 from typing import List, Dict
 import logging
-import json
-import csv
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from shared.csv_writer import csv_writer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -95,34 +96,10 @@ async def crawl_courses(department_code: str, debug_mode: bool) -> List:
             course_list.append(course_info)
     return course_list
 
-def write_to_csv(course_data: List[Dict], filename: str = "courses.csv"):
-        """
-        Writes extracted research information to a CSV file.
-
-        Args:
-            research_data: List of dictionaries containing professor info.
-            filename: Name of the CSV file to write to.
-        """
-        if not course_data:
-            logger.warning("No course data to write.")
-            return
-
-        # Determine the CSV headers from keys of the first dictionary
-        headers = course_data[0].keys()
-        try:
-            with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=headers)
-                writer.writeheader()
-                for row in course_data:
-                    writer.writerow(row)
-            logger.info(f"Research data written to {filename}")
-        except Exception as e:
-            logger.error(f"Failed to write CSV: {e}")
-
 async def extract_course(department_code: str, debug_mode: bool=False):
     course_info = await crawl_courses(department_code, debug_mode)
     if course_info:
-        write_to_csv(course_info)
+        csv_writer(course_info, "courses.csv")
 
 
 if __name__ == "__main__":

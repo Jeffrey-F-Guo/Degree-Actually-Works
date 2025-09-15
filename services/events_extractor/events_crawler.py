@@ -5,9 +5,12 @@ from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chat_models import init_chat_model
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Dict
 import logging
 import csv
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from shared.csv_writer import csv_writer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,14 +18,13 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 base_url = "https://win.wwu.edu/events/?categories=9821&categories=17934&categories=21914&categories=9822&categories=11780&categories=23412&categories=9830"
 
-load_dotenv()
 
 
 prompt_template = ChatPromptTemplate.from_messages([
     {
         "role": "system",
-        "content": """Your role is to extract information from a markdown file.
-                Given a markdown file, extract and return a list of events. Each event should have the following fields:
+        "content": """Your role is to extract information from a html file.
+                Given a html file, extract and return a list of events. Each event should have the following fields:
 
                     event_name: str
                     date: str
@@ -41,10 +43,10 @@ class EventEntry(BaseModel):
     page_url: str
 
 class ExtractedEvents(BaseModel):
-    events: List[EventEntry] = Field(..., description="A list of events with their details.")
+    events: List[EventEntry] = Field(default_factory=list, description="A list of events with their details.")
 
 
-async def crawl(base_url: str) -> List[EventEntry]:
+async def crawl_events(base_url: str) -> List[EventEntry]:
     js_commands = [
         "window.scrollTo(0, document.body.scrollHeight);",
         "Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Load More'))?.click();"
@@ -58,7 +60,7 @@ async def crawl(base_url: str) -> List[EventEntry]:
         session_id = "base_event_page_session"
         config = CrawlerRunConfig(
             js_code=js_commands,
-            js_only=True,
+            js_only=True, # ensures browser window doesnt reload
             session_id=session_id  # ensures same tab
         )
 
@@ -75,7 +77,7 @@ async def crawl(base_url: str) -> List[EventEntry]:
             # debugging check
             print("Page length:", cur_page_len)
 
-            # TODO: replace with your real stop condition
+            # TODO: replace with more consistent stop condition
             if cur_page_len == prev_page_len:
                 break
             else:
@@ -83,52 +85,28 @@ async def crawl(base_url: str) -> List[EventEntry]:
 
 
         results = await crawler.arun(url=base_url, config=config)
-        model = init_chat_model("gemini-2.5-flash", model_provider="google_genai")
+        model = init_chat_model("gemini-2.5-flash", model_provider="google-genai")
 
         summary_llm = model.with_structured_output(ExtractedEvents)
 
         extraction_chain = prompt_template | summary_llm
+        logger.info("invoke llm")
         output = extraction_chain.invoke({"html": results.html})
+        if not output:
+            logger.warning("Did not extract any events")
+            return []
 
-        print(output)
-        print(f"output len is {len(output.events)}")
+        events_list = []
+        for event in output.events:
+            events_list.append(event.model_dump())
 
-        write_research_to_csv(output.events)
-
-    return []
-
-def write_research_to_csv(event_data: List[EventEntry], filename: str = "events.csv"):
-        """
-        Writes extracted research information to a CSV file.
-
-        Args:
-            research_data: List of dictionaries containing professor info.
-            filename: Name of the CSV file to write to.
-        """
-        if not event_data:
-            logger.warning("No research data to write.")
-            return
-
-        # Determine the CSV headers from keys of the first dictionary
-        headers = event_data[0].model_dump().keys()
-
-        try:
-            with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=headers)
-                writer.writeheader()
-                for entry in event_data:
-                    row = entry.model_dump()
-                    writer.writerow(row)
-            logger.info(f"Research data written to {filename}")
-        except Exception as e:
-            logger.error(f"Failed to write CSV: {e}")
+        return events_list
 
 
+async def extract_events(base_url: str):
+    events_list = await crawl_events(base_url)
+    if events_list:
+        csv_writer(events_list, "events.csv")
 
-def filter_events():
-    """
-    Filters out events that have already happened
-    """
-    pass
 if __name__ == "__main__":
-    asyncio.run(crawl(base_url))
+    asyncio.run(extract_events(base_url))

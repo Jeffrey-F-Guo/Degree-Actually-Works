@@ -1,25 +1,53 @@
 version: '3.8'
 
 services:
+  # Research Extractor Service
   research-extractor:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/research-extractor/Dockerfile
     container_name: research-extractor
-    restart: unless-stopped
+    restart: "no"  # One-time run for scraping
     volumes:
-      # Mount a volume for logs (optional)
       - ./logs:/app/logs
+      - ./scripts/Gemini/research_extractor:/app
     environment:
-      # Add any environment variables your app needs
       - PYTHONUNBUFFERED=1
+    profiles:
+      - research
 
-    # For one-time runs (which is typical for this scraping script)
-    # Remove 'restart: unless-stopped' and add this if you want it to run once and stop
-    # restart: "no"
+  # LLM Service
+  llm-service:
+    build:
+      context: .
+      dockerfile: docker/llm-service/Dockerfile
+    container_name: llm-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs:/app/logs
+      - ./utils:/app/utils
+    environment:
+      - PYTHONUNBUFFERED=1
+      - API_KEY=${API_KEY:-}
+    profiles:
+      - llm
 
-    # Uncomment if you add a web interface later
-    # ports:
-    #   - "8000:8000"
+  # Courses Extractor Service
+  courses-extractor:
+    build:
+      context: .
+      dockerfile: docker/courses-extractor/Dockerfile
+    container_name: courses-extractor
+    restart: "no"  # One-time run for scraping
+    volumes:
+      - ./logs:/app/logs
+      - ./scripts/Gemini/courses_extractor:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    profiles:
+      - courses
 
-    # The container will run research_crawler.py by default as defined in Dockerfile
+# To run all services together, use:
+# docker-compose --profile research --profile llm --profile courses up

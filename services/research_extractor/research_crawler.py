@@ -5,10 +5,12 @@ import os
 from urllib.parse import urljoin, urlparse
 from typing import List, Dict
 import logging
-import csv
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chat_models import init_chat_model
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from shared.csv_writer import csv_writer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -146,32 +148,6 @@ async def extract_department_research(department_code, debug_mode=False) -> List
     research_info = await extract_professor_information(faculty_urls, debug_mode=debug_mode)
     return research_info
 
-def write_research_to_csv(research_data: List[Dict], department_code: str):
-    """
-    Writes extracted research information to a CSV file.
-
-    Args:
-        research_data: List of dictionaries containing professor info.
-        filename: Name of the CSV file to write to.
-    """
-    if not research_data:
-        logger.warning("No research data to write.")
-        return
-
-    # Determine the CSV headers from keys of the first dictionary
-    headers = research_data[0].keys()
-
-    try:
-        filename = f"{department_code}_research.csv"
-        with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=headers)
-            writer.writeheader()
-            for row in research_data:
-                writer.writerow(row)
-        logger.info(f"Research data written to {filename}")
-    except Exception as e:
-        logger.error(f"Failed to write CSV: {e}")
-
 # TODO: doesnt work universally for professor pages across all departments, only CSCI
 def _get_professor_profile_schema() -> Dict:
     """
@@ -235,9 +211,8 @@ async def extract_research_by_department(department_code: str, debug_mode: bool=
 
     research_info = await extract_department_research(department_code, debug_mode)
     if research_info and write_to_csv:
-        write_research_to_csv(research_info, department_code)
+        csv_writer(research_info, "research.csv")
     return research_info
 
 if __name__ == "__main__":
-    asyncio.run(extract_research_by_department("MATH", debug_mode=True, write_to_csv=True))
-    # asyncio.run(extract_professor_information(["https://cs.wwu.edu/harri267"], True))
+    asyncio.run(extract_research_by_department("CSCI", debug_mode=True, write_to_csv=True))

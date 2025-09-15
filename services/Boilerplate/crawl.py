@@ -14,7 +14,7 @@ async def crawl():
     # Create an instance of AsyncWebCrawler
     async with AsyncWebCrawler() as crawler:
         # Run the crawler on a URL
-        result = await crawler.arun(url="https://mathematics.wwu.edu/people/bergeta")
+        result = await crawler.arun(url="https://mathematics.wwu.edu/people/noguchk")
 
         # Print the extracted content
         with open("math_prof.html", "w") as f:
