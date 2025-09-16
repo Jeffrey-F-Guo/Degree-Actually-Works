@@ -10,19 +10,12 @@ import logging
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.csv_writer import csv_writer
+import config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
-
-BASE_URLS = {
-    "CSCI": "https://catalog.wwu.edu/preview_program.php?catoid=22&poid=10593",
-    "MATH": "https://catalog.wwu.edu/preview_program.php?catoid=22&poid=10724",
-    "PSYCH": "https://catalog.wwu.edu/preview_program.php?catoid=22&poid=10754",
-    "BUS": "https://catalog.wwu.edu/preview_program.php?catoid=22&poid=11053",
-
-}
 
 class courseInfo(BaseModel):
     course_name:str = Field(..., description="Name of the course")
@@ -41,50 +34,22 @@ def init_llm( prompt_template, model="gemini-2.5-flash", model_provider="google-
     return llm_chain
 
 async def crawl_courses(department_code: str, debug_mode: bool) -> List:
-    if department_code not in BASE_URLS:
+    base_urls = config.get_base_urls()
+    if department_code not in base_urls:
         raise ValueError(f"{department_code} is not a valid department at WWU.")
 
-    js_commands = [
-        """
-        async function expandAllCourses() {
-            const links = document.querySelectorAll('li.acalog-course span a[onclick*="showCourse"]');
-            for (let i = 0; i < links.length; i++) {
-                links[i].click();
-            }
-        }
+    prompt_template = ChatPromptTemplate.from_messages(config.get_llm_prompt())
 
-        expandAllCourses();
-        """
-    ]
+    crawler_config_dict = config.get_crawler_config()
+    crawler_config = CrawlerRunConfig(**crawler_config_dict)
 
-    prompt_template = ChatPromptTemplate.from_messages([
-        {
-            "role": "system",
-            "content": """Your role is to extract information from a markdown file.
-                    Given a markdown file, extract and return a list of courses. Each course should have the following fields:
-
-                        course_name: str
-                        course_description: str
-                        course_prereqs: str
-                        course_credits: int
-            """
-        },
-        {
-            "role": "user",
-            "content": "{markdown}"
-        }
-    ])
-    config = CrawlerRunConfig(
-        js_code=js_commands,
-        delay_before_return_html=30.0  # Wait for all expansions to complete
-    )
-
-    base_url = BASE_URLS[department_code]
-    b_config = BrowserConfig(headless=(not debug_mode))
+    base_url = base_urls[department_code]
+    browser_config_dict = config.get_browser_config(debug_mode)
+    b_config = BrowserConfig(**browser_config_dict)
     course_list = []
     async with AsyncWebCrawler(config=b_config) as crawler:
         # navigate once to the base URL
-        results = await crawler.arun(url=base_url, config=config)
+        results = await crawler.arun(url=base_url, config=crawler_config)
         llm = init_llm(prompt_template)
         print("invoking")
         courses = llm.invoke({"markdown": results.markdown})

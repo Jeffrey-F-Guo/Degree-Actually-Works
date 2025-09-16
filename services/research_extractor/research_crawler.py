@@ -11,24 +11,11 @@ from langchain.chat_models import init_chat_model
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.csv_writer import csv_writer
+import config
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# base path for all professor pages by department
-BASE_URLS = {
-    "CSCI": "https://cs.wwu.edu",
-    "BIO": "https://biology.wwu.edu/people",
-    "MATH": "https://mathematics.wwu.edu/people"
-}
-
-# main faculty page for each department
-FACULTY_URLS = {
-    "CSCI": "https://cs.wwu.edu/faculty",
-    "BIO": "https://biology.wwu.edu/directory/faculty",
-    "MATH": "https://mathematics.wwu.edu/directory",
-}
 
 
 class ProfessorPage(BaseModel):
@@ -55,24 +42,27 @@ async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> L
         List of absolute URLS to individual professor pages.
     """
     logger.info("Extracting faculty urls.")
-    if department_code not in BASE_URLS or department_code not in FACULTY_URLS:
+    base_urls = config.get_base_urls()
+    faculty_urls = config.get_faculty_urls()
+
+    if department_code not in base_urls or department_code not in faculty_urls:
         raise ValueError(f"{department_code} is not a valid department at WWU.")
 
     # config crawler
     browser_config = BrowserConfig(headless=(not debug_mode))
-    schema = _get_faculty_page_schema()
+    schema = config.get_faculty_page_schema()
     extraction_strategy = JsonCssExtractionStrategy(schema, verbose=True)
-    config = CrawlerRunConfig(
+    crawler_config = CrawlerRunConfig(
         extraction_strategy=extraction_strategy,
     )
 
     # Select url paths by department
-    base_url = BASE_URLS[department_code]
-    faculty_url = FACULTY_URLS[department_code]
+    base_url = base_urls[department_code]
+    faculty_url = faculty_urls[department_code]
 
     # Run crawler
     async with AsyncWebCrawler(config=browser_config) as crawler:
-        results = await crawler.arun(faculty_url, config=config)
+        results = await crawler.arun(faculty_url, config=crawler_config)
         if not results.extracted_content:
             logger.warning(f"No content extracted from {faculty_url}.")
             return []
@@ -85,30 +75,9 @@ async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> L
             all_pages.add(absolute_url)
         return list(all_pages)
 
-"""
-*special instructions for research_interest*: first check the page for a research interest section.
-If not on the page, make sure to check the publication section
-to determine professor research interest.
-"""
+
 async def extract_professor_information(url_list: List, debug_mode: bool=False):
-    prompt_template = ChatPromptTemplate.from_messages([
-        {
-            "role": "system",
-            "content": """Your role is to extract information from a markdown file.
-                    Given a markdown file, extract and return a list. Each event represents a prefoessor's web page
-                    and should have the following fields:
-
-                        name: str
-                        website: str (optional)
-                        research_interest: list (optional) *important note: this must be academic interest. Only record research interests if they are under the research interests section. If there is no research section, leave the list empty*
-
-            """
-        },
-        {
-            "role": "user",
-            "content": "{markdown}"
-        }
-    ])
+    prompt_template = ChatPromptTemplate.from_messages(config.get_llm_prompt())
     llm_chain = init_llm(prompt_template)
     browser_config = BrowserConfig(headless= (not debug_mode))
     research_info = []
@@ -148,53 +117,8 @@ async def extract_department_research(department_code, debug_mode=False) -> List
     research_info = await extract_professor_information(faculty_urls, debug_mode=debug_mode)
     return research_info
 
-# TODO: doesnt work universally for professor pages across all departments, only CSCI
-def _get_professor_profile_schema() -> Dict:
-    """
-    CSS extraction schema for extracting professor information from professor profile pages.
-    """
-    return {
-        "name": "Professor Page",
-        "baseSelector" : "body",
-        "fields": [
-            {
-                "name": "professor_name",
-                "selector": "h1.field-content",
-                "type": "text",
-                "default": "None"
-            },
-            {
-                "name": "website",
-                "selector": "div.website a",
-                "type": "attribute",
-                "attribute": "href",
-                "default": "None"
-            },
-            {
-                "name": "research_interest",
-                "selector": "h2.views-label-field-research-interests+p",
-                "type": "text",
-                "default": "None"
-            },
-        ]
-    }
 
-def _get_faculty_page_schema() -> Dict:
-    """
-    CSS extraction schema for extracting professor pages from the base faculty page.
-    """
-    return {
-        "name": "Faculty Page",
-        "baseSelector": "div.card",
-        "fields": [
-            {
-                "name": "professor_page_url",
-                "selector": "a",
-                "type": "attribute",
-                "attribute": "href"
-            },
-        ]
-    }
+
 
 
 # 'public' wrapper. Other files import this function
@@ -211,7 +135,7 @@ async def extract_research_by_department(department_code: str, debug_mode: bool=
 
     research_info = await extract_department_research(department_code, debug_mode)
     if research_info and write_to_csv:
-        csv_writer(research_info, "research.csv")
+        csv_writer(research_info, f"research_{department_code}.csv")
     return research_info
 
 if __name__ == "__main__":
