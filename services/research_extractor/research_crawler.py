@@ -1,17 +1,20 @@
 import asyncio
-from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, JsonCssExtractionStrategy, BrowserConfig
 import json
 import os
+import logging
+
+from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, JsonCssExtractionStrategy, BrowserConfig
 from urllib.parse import urljoin, urlparse
 from typing import List, Dict
-import logging
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.chat_models import init_chat_model
+
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from shared.csv_writer import csv_writer
-import config
+from shared_utils.csv_writer import csv_writer
+from shared_utils.llm_init import llm_init
+import research_extractor.config as config
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -22,14 +25,6 @@ class ProfessorPage(BaseModel):
     name: str = Field(..., description="Professor's name")
     website: str = Field("N/A", description="Professor's personal website")
     research_interest: List[str] = Field(default_factory=list, description="List of professor's research interests")
-
-def init_llm( prompt_template, model="gemini-2.5-flash", model_provider="google-genai"):
-    llm = init_chat_model(model=model, model_provider=model_provider)
-    structured_llm = llm.with_structured_output(ProfessorPage)
-    llm_chain = prompt_template | structured_llm
-
-    return llm_chain
-
 
 async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> List[str]:
     """
@@ -78,7 +73,7 @@ async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> L
 
 async def extract_professor_information(url_list: List, debug_mode: bool=False):
     prompt_template = ChatPromptTemplate.from_messages(config.get_llm_prompt())
-    llm_chain = init_llm(prompt_template)
+    llm_chain = llm_init(prompt_template, ProfessorPage)
     browser_config = BrowserConfig(headless= (not debug_mode))
     research_info = []
 
@@ -89,13 +84,13 @@ async def extract_professor_information(url_list: List, debug_mode: bool=False):
             if professor_info.markdown:
                 try: # catch llm errors
                     data = llm_chain.invoke({"markdown": professor_info.markdown})
-                    if data:
-                        professor_data = data.model_dump()
-                        if professor_data:
-                            professor_data["src_url"] = professor_info.url
-                            research_info.append(professor_data)
                 except Exception as e:
-                    logger.error(f"Failed to extract info from {url_list[i]}: {e}")
+                    logger.error(f"LLM error while extracting info from {url_list[i]}: {e}")
+                if data:
+                    professor_data = data.model_dump()
+                    if professor_data:
+                        professor_data["src_url"] = professor_info.url
+                        research_info.append(professor_data)
     return research_info
 
 async def extract_department_research(department_code, debug_mode=False) -> List[dict]:
@@ -118,9 +113,6 @@ async def extract_department_research(department_code, debug_mode=False) -> List
     return research_info
 
 
-
-
-
 # 'public' wrapper. Other files import this function
 async def extract_research_by_department(department_code: str, debug_mode: bool=False, write_to_csv: bool = False) -> None:
     """
@@ -139,4 +131,4 @@ async def extract_research_by_department(department_code: str, debug_mode: bool=
     return research_info
 
 if __name__ == "__main__":
-    asyncio.run(extract_research_by_department("CSCI", debug_mode=True, write_to_csv=True))
+    asyncio.run(extract_research_by_department("CSCI", debug_mode=False, write_to_csv=True))

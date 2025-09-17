@@ -1,16 +1,19 @@
 import asyncio
-from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, BrowserConfig
 import os
+import logging
+
+from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, BrowserConfig
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.chat_models import init_chat_model
 from pydantic import BaseModel, Field
 from typing import List, Dict
-import logging
+
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from shared.csv_writer import csv_writer
-import config
+from shared_utils.csv_writer import csv_writer
+from shared_utils.llm_init import llm_init
+import courses_extractor.config as config
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,13 +28,6 @@ class courseInfo(BaseModel):
 
 class courseInfoList(BaseModel):
     info_list: List[courseInfo] = Field(..., description="List of course information")
-
-def init_llm( prompt_template, model="gemini-2.5-flash", model_provider="google-genai"):
-    llm = init_chat_model(model=model, model_provider=model_provider)
-    structured_llm = llm.with_structured_output(courseInfoList)
-    llm_chain = prompt_template | structured_llm
-
-    return llm_chain
 
 async def crawl_courses(department_code: str, debug_mode: bool) -> List:
     base_urls = config.get_base_urls()
@@ -50,9 +46,13 @@ async def crawl_courses(department_code: str, debug_mode: bool) -> List:
     async with AsyncWebCrawler(config=b_config) as crawler:
         # navigate once to the base URL
         results = await crawler.arun(url=base_url, config=crawler_config)
-        llm = init_llm(prompt_template)
-        print("invoking")
-        courses = llm.invoke({"markdown": results.markdown})
+        try:
+            llm = llm_init(prompt_template, courseInfoList)
+            logger.info("invoking")
+            courses = llm.invoke({"markdown": results.markdown})
+        except Exception as e:
+            logger.error(f"LLM error extracting courses: {e}")
+            return []
         if not courses:
             logger.warning("No courses found")
             return []
@@ -65,6 +65,7 @@ async def extract_course(department_code: str, debug_mode: bool=False):
     course_info = await crawl_courses(department_code, debug_mode)
     if course_info:
         csv_writer(course_info, "courses.csv")
+    return course_info
 
 
 if __name__ == "__main__":

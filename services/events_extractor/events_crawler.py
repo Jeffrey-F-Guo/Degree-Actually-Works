@@ -1,17 +1,20 @@
 import asyncio
-from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, BrowserConfig
 import os
-from dotenv import load_dotenv
-from langchain_core.prompts import ChatPromptTemplate
-from langchain.chat_models import init_chat_model
-from pydantic import BaseModel, Field
-from typing import List, Dict
 import logging
 import csv
 import sys
+
+from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, BrowserConfig
+from dotenv import load_dotenv
+from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel, Field
+from typing import List, Dict
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from shared.csv_writer import csv_writer
-import config
+from shared_utils.csv_writer import csv_writer
+from shared_utils.llm_init import llm_init
+import events_extractor.config as config
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,7 +28,6 @@ class EventEntry(BaseModel):
 
 class ExtractedEvents(BaseModel):
     events: List[EventEntry] = Field(default_factory=list, description="A list of events with their details.")
-
 
 async def crawl_events(base_url: str, debug_mode: bool = False) -> List[EventEntry]:
     prev_page_len = 0
@@ -46,7 +48,6 @@ async def crawl_events(base_url: str, debug_mode: bool = False) -> List[EventEnt
             # execute JS without reloading the page
             results = await crawler.arun(url=base_url, config=crawler_config)
             await asyncio.sleep(2)
-
             cur_page_len = len(results.markdown)
             # debugging check
             print("Page length:", cur_page_len)
@@ -58,15 +59,19 @@ async def crawl_events(base_url: str, debug_mode: bool = False) -> List[EventEnt
                 prev_page_len = cur_page_len
 
         results = await crawler.arun(url=base_url, config=crawler_config)
-        model = init_chat_model("gemini-2.5-flash", model_provider="google-genai")
 
-        summary_llm = model.with_structured_output(ExtractedEvents)
-        prompt_template = ChatPromptTemplate.from_messages(config.get_llm_prompt())
-        extraction_chain = prompt_template | summary_llm
-        logger.info("invoke llm")
-        output = extraction_chain.invoke({"html": results.html})
+        try:
+            prompt_template = ChatPromptTemplate.from_messages(config.get_llm_prompt())
+            extraction_chain = llm_init(prompt_template, ExtractedEvents)
+            # debugging check
+            logger.info("invoke llm")
+            output = extraction_chain.invoke({"html": results.html})
+        except Exception as e:
+            logger.error(f"Error extracting events: {e}")
+            return []
+
         if not output:
-            logger.warning("Did not extract any events")
+            logger.warning("Did not find any events")
             return []
 
         events_list = []
@@ -80,6 +85,7 @@ async def extract_events(base_url: str, debug_mode: bool = False):
     events_list = await crawl_events(base_url, debug_mode)
     if events_list:
         csv_writer(events_list, "events.csv")
+    return events_list
 
 if __name__ == "__main__":
     asyncio.run(extract_events(config.get_base_url(), debug_mode=True))
