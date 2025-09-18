@@ -1,6 +1,7 @@
 import asyncio
 import os
 import logging
+import re
 
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, BrowserConfig
 from dotenv import load_dotenv
@@ -33,18 +34,24 @@ async def prefilter_markdown(markdown: str) -> str:
     """
     Pre-filter the markdown to remove unnecessary content.
     """
+    if not markdown:
+        logger.error("No markdown found")
+        return []
     courses = markdown.split("### Grade Requirements")
-    if len(courses) > 1:
-        return courses[1]
-        # course_reqs = courses[1].split("###  Electives")
-        # if len(course_reqs) > 1:
-        #     return (course_reqs[0], course_reqs[1])
-        # else:
-        #     logger.warning("No electives found in markdown")
-        #     return markdown
-    else:
-        logger.warning("Unexpected course format")
-        return markdown
+    # Remove initial major blurb
+    if len(courses) < 2:
+        logger.warning("Unexpected course page format")
+        return [markdown]
+
+    reqs = courses[1]
+    pattern = r"(###.*?---)"
+    matches = re.findall(pattern, reqs, flags=re.DOTALL)
+
+    course_list = []
+    for match in matches:
+        course_list.append(match.strip())
+
+    return course_list
 
 async def crawl_courses(department_code: str, debug_mode: bool) -> List:
     base_urls = config.get_base_urls()
@@ -59,22 +66,25 @@ async def crawl_courses(department_code: str, debug_mode: bool) -> List:
     base_url = base_urls[department_code]
     browser_config_dict = config.get_browser_config(debug_mode)
     b_config = BrowserConfig(**browser_config_dict)
+
+    # List of courses to return
+    course_list = []
     async with AsyncWebCrawler(config=b_config) as crawler:
         # navigate once to the base URL
         results = await crawler.arun(url=base_url, config=crawler_config)
-        core_courses = await prefilter_markdown(results.markdown)
+        markdown_list = await prefilter_markdown(results.markdown)
+        if not markdown_list:
+            return []
         try:
-            llm = llm_init(prompt_template, courseInfoList)
+            llm = llm_init(prompt_template, courseInfo)
             logger.info("invoking")
-            courses = llm.invoke({"markdown": core_courses})
+            for entry in markdown_list:
+                course = llm.invoke({"markdown": entry})
+                course_list.append(course.model_dump())
+
         except Exception as e:
             logger.error(f"LLM error extracting courses: {e}")
             return []
-
-        if courses and courses.info_list:
-            course_list = [course.model_dump() for course in courses.info_list]
-        else:
-            course_list = []
 
     return course_list
 

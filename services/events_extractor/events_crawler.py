@@ -94,9 +94,6 @@ async def crawl_events(base_url: str, debug_mode: bool = False) -> List[EventEnt
             # debugging check
             print("Page length:", cur_page_len)
 
-            # TODO: replace with more consistent stop condition
-            #For debugging
-            # break
             if cur_page_len == prev_page_len:
                 break
             else:

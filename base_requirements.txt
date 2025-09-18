@@ -10,3 +10,4 @@ langchain-google-genai
 datetime
 python-dateutil
 numpy < 2
+beautifulsoup4
