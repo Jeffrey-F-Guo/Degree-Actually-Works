@@ -32,7 +32,7 @@ def get_llm_prompt() -> List[Dict[str, str]]:
                     and should have the following fields:
 
                         name: str
-                        website: str (optional)
+                        website: str (optional). Only include URLS that are under the website section. If there is no website section, leave the field empty.
                         research_interest: list (optional) *important note: this must be academic interest. Only record research interests if they are under the research interests section. If there is no research section, leave the list empty*
 
             """

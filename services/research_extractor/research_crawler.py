@@ -83,6 +83,7 @@ async def extract_professor_information(url_list: List, debug_mode: bool=False):
         for i, professor_info in enumerate(professor_info_list):
             if professor_info.markdown:
                 try: # catch llm errors
+                    logger.info(f"invoking llm for {url_list[i]}")
                     data = llm_chain.invoke({"markdown": professor_info.markdown})
                 except Exception as e:
                     logger.error(f"LLM error while extracting info from {url_list[i]}: {e}")
