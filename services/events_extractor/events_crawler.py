@@ -3,6 +3,8 @@ import os
 import logging
 import csv
 import sys
+import re
+from bs4 import BeautifulSoup
 
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, BrowserConfig
 from dotenv import load_dotenv
@@ -29,6 +31,44 @@ class EventEntry(BaseModel):
 class ExtractedEvents(BaseModel):
     events: List[EventEntry] = Field(default_factory=list, description="A list of events with their details.")
 
+def prefilter_html(html: str) -> str:
+    """
+    Extract only event-related content from the HTML to reduce size for LLM processing.
+    This significantly reduces the HTML size by keeping only event cards and essential structure.
+    """
+    try:
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Find the event discovery list container
+        event_list = soup.find('div', id='event-discovery-list')
+        if not event_list:
+            # Fallback: look for MuiCard-root elements
+            event_cards = soup.find_all('div', class_=re.compile(r'MuiCard-root'))
+            if event_cards:
+                # Create a minimal container with just the event cards
+                filtered_html = f"""
+                <div id="event-discovery-list">
+                    <div style="display: flex; flex-wrap: wrap; margin: -10px">
+                        {''.join(str(card) for card in event_cards)}
+                    </div>
+                </div>
+                """
+                return filtered_html
+            else:
+                logger.warning("No event cards found in HTML")
+                return html
+
+        logger.info(f"HTML pre-filtered: {len(html)} -> {len(filtered_html)} characters ({len(filtered_html)/len(html)*100:.1f}% reduction)")
+        return str(event_list)
+
+    except Exception as e:
+        logger.error(f"Error pre-filtering HTML: {e}")
+        return html
+
+async def save_html(html: str, filename: str):
+    with open(filename, "w") as f:
+        f.write(html)
+
 async def crawl_events(base_url: str, debug_mode: bool = False) -> List[EventEntry]:
     prev_page_len = 0
     cur_page_len = 0
@@ -48,11 +88,15 @@ async def crawl_events(base_url: str, debug_mode: bool = False) -> List[EventEnt
             # execute JS without reloading the page
             results = await crawler.arun(url=base_url, config=crawler_config)
             await asyncio.sleep(2)
-            cur_page_len = len(results.markdown)
+            await save_html(results.html, "events.html")
+            await save_html(results.markdown, "events.markdown")
+            cur_page_len = len(results.html)
             # debugging check
             print("Page length:", cur_page_len)
 
             # TODO: replace with more consistent stop condition
+            #For debugging
+            # break
             if cur_page_len == prev_page_len:
                 break
             else:
@@ -62,30 +106,32 @@ async def crawl_events(base_url: str, debug_mode: bool = False) -> List[EventEnt
 
         try:
             prompt_template = ChatPromptTemplate.from_messages(config.get_llm_prompt())
-            extraction_chain = llm_init(prompt_template, ExtractedEvents)
+            extraction_chain = llm_init(prompt_template, ExtractedEvents, model="gemini-2.5-flash")
             # debugging check
             logger.info("invoke llm")
             output = extraction_chain.invoke({"html": results.html})
+            if output and output.events:
+                events_list = [event.model_dump() for event in output.events]
+            else:
+                events_list = []
         except Exception as e:
             logger.error(f"Error extracting events: {e}")
             return []
 
-        if not output:
+        if not events_list:
             logger.warning("Did not find any events")
             return []
-
-        events_list = []
-        for event in output.events:
-            events_list.append(event.model_dump())
 
         return events_list
 
 
 async def extract_events(base_url: str, debug_mode: bool = False):
     events_list = await crawl_events(base_url, debug_mode)
+    # events_list = await dummy_test()
     if events_list:
         csv_writer(events_list, "events.csv")
     return events_list
+
 
 if __name__ == "__main__":
     asyncio.run(extract_events(config.get_base_url(), debug_mode=True))
