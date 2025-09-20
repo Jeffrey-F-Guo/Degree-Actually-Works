@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies required for crawl4ai and web scraping
+# Install system dependencies required for web scraping and Playwright
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -37,22 +37,24 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file from the root
-COPY base_requirements.txt requirements.txt
+# Copy requirements file
+COPY base_requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r base_requirements.txt
 
-# Copy only the research_extractor folder contents
-COPY scripts/Gemini/research_extractor/ ./
+# Copy the application code
+COPY services/ ./services/
 
-# Create a non-root user for security
-RUN useradd --create-home --shell /bin/bash app \
-    && chown -R app:app /app
-USER app
 
-# Install Playwright browsers as the app user (so they go to the right cache location)
+# Install Playwright browsers as the app user
 RUN playwright install chromium
 
-# Set the default command to run the research crawler
-CMD ["python", "research_crawler.py"]
+# Create logs directory
+RUN mkdir -p /app/logs
+
+# Expose the port the app runs on
+EXPOSE 8000
+
+# Set the default command to run the API server
+CMD ["uvicorn", "services.app:app", "--host", "0.0.0.0", "--port", "8000"]

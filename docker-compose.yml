@@ -1,53 +1,33 @@
-version: '3.8'
-
 services:
-  # Research Extractor Service
-  research-extractor:
+  # WWU Resource Extractor API
+  wwu-extractor-api:
     build:
       context: .
-      dockerfile: docker/research-extractor/Dockerfile
-    container_name: research-extractor
-    restart: "no"  # One-time run for scraping
-    volumes:
-      - ./logs:/app/logs
-      - ./scripts/Gemini/research_extractor:/app
-    environment:
-      - PYTHONUNBUFFERED=1
-    profiles:
-      - research
-
-  # LLM Service
-  llm-service:
-    build:
-      context: .
-      dockerfile: docker/llm-service/Dockerfile
-    container_name: llm-service
+      dockerfile: Dockerfile
+    container_name: wwu-extractor-api
     restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
       - ./logs:/app/logs
-      - ./utils:/app/utils
     environment:
       - PYTHONUNBUFFERED=1
-      - API_KEY=${API_KEY:-}
-    profiles:
-      - llm
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}  # Google Gemini API key
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  # Courses Extractor Service
-  courses-extractor:
-    build:
-      context: .
-      dockerfile: docker/courses-extractor/Dockerfile
-    container_name: courses-extractor
-    restart: "no"  # One-time run for scraping
-    volumes:
-      - ./logs:/app/logs
-      - ./scripts/Gemini/courses_extractor:/app
-    environment:
-      - PYTHONUNBUFFERED=1
-    profiles:
-      - courses
-
-# To run all services together, use:
-# docker-compose --profile research --profile llm --profile courses up
+# To run the service:
+# docker-compose up -d
+#
+# To rebuild and run:
+# docker-compose up --build -d
+#
+# To view logs:
+# docker-compose logs -f
+#
+# To stop:
+# docker-compose down

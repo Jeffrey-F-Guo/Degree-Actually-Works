@@ -58,20 +58,28 @@ env/
 ehthumbs.db
 Thumbs.db
 
-# Logs
-logs/
-*.log
+# Logs (keep logs directory structure but exclude content)
+logs/*.log
+logs/*.csv
 
-# Other folders not needed in the container
-docker/
+# Test and development files
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Exclude other scripts folders we don't need
-scripts/agents/
-scripts/docker/
-scripts/utils/
-scripts/web_scraping/
+# Frontend (not needed for backend container)
+Frontend/
 
-# Keep only the Gemini/research_extractor path we need
+# Web scraping scripts (not part of the main API)
+web scraping/
+
+# Agents (separate container)
+agents/
+
+# Boilerplate examples
+services/Boilerplate/
+
+# CSV output files (will be generated in container)
+services/*.csv
+services/*.html
+services/*.markdown
