@@ -25,8 +25,7 @@ Perks
 Select perks
 Reset Filters
 ## Event List
-Showing 76 out of 76 events.
-### [Fall Vaccine Clinics ![Counseling, Health, & Wellness](https://se-images.campuslabs.com/clink/images/a698ffd0-8e77-4287-8505-0c8d108772070d68855b-5460-4eb8-995b-6887bd80fb56.png?preset=small-sq)Counseling, Health, & Wellness ](https://win.wwu.edu/event/11656422)
+Showing 78 out of 78 events.
 ### [Fall Info Fair 2025 ![Fall Info Fair](https://se-images.campuslabs.com/clink/images/57d8b571-43c6-492c-9e9d-8c97209e78387053233a-d6a1-480e-b19b-9507fd123432.PNG?preset=small-sq)Fall Info Fair ](https://win.wwu.edu/event/11369798)
 ### [Western Libraries & Learning Commons Tour ![Western Libraries](https://se-images.campuslabs.com/clink/images/0a7fcde1-98fa-442e-9002-832fb7d8831bad814865-5251-4ef1-8dee-701fbc2b8ea2.jpg?preset=small-sq)Western Libraries ](https://win.wwu.edu/event/11603344)
 ### [Western Libraries Orientation Workshop ![Western Libraries](https://se-images.campuslabs.com/clink/images/0a7fcde1-98fa-442e-9002-832fb7d8831bad814865-5251-4ef1-8dee-701fbc2b8ea2.jpg?preset=small-sq)Western Libraries ](https://win.wwu.edu/event/11603280)
@@ -51,13 +50,16 @@ Showing 76 out of 76 events.
 ### [Career Center Virtual Drop-Ins ![Career Services](https://se-images.campuslabs.com/clink/images/3badaffb-6249-4cb0-b71a-636ec84da52085ec2605-15cc-496d-8591-87a85636f359.jpg?preset=small-sq)Career Services ](https://win.wwu.edu/event/11612328)
 ### [Cover Letter Crash Course  ![Career Services](https://se-images.campuslabs.com/clink/images/3badaffb-6249-4cb0-b71a-636ec84da52085ec2605-15cc-496d-8591-87a85636f359.jpg?preset=small-sq)Career Services ](https://win.wwu.edu/event/11527653)
 ### [1st Meeting of the 2025-2026 School Year ![Club for Urban and Environmental Sustainability](https://se-images.campuslabs.com/clink/images/d57a2568-40ca-40e9-8e5b-60813188a4a97ed8871b-7ef3-4185-a62d-81e1c56a9565.png?preset=small-sq)Club for Urban and Environmental Sustainability ](https://win.wwu.edu/event/11622063)
+### [Whatcom WRITES Generative Writing Drop-In (Theme - "Family: Formed, Found, and Chosen") ![Western Libraries](https://se-images.campuslabs.com/clink/images/0a7fcde1-98fa-442e-9002-832fb7d8831bad814865-5251-4ef1-8dee-701fbc2b8ea2.jpg?preset=small-sq)Western Libraries ](https://win.wwu.edu/event/11666902)
 ### [Week Without Driving: Ride to Fred Meyer ![Transportation Services](https://se-images.campuslabs.com/clink/images/49edc5bb-fdbd-498e-8dc2-34b4e05f8b89411b2d8d-5ac5-4095-a191-5a817961d959.png?preset=small-sq)Transportation Services ](https://win.wwu.edu/event/11466290)
 ### [Career Center Virtual Drop-Ins ![Career Services](https://se-images.campuslabs.com/clink/images/3badaffb-6249-4cb0-b71a-636ec84da52085ec2605-15cc-496d-8591-87a85636f359.jpg?preset=small-sq)Career Services ](https://win.wwu.edu/event/11612354)
 ### [Week Without Driving: Ride to Bellis Fair ![Transportation Services](https://se-images.campuslabs.com/clink/images/49edc5bb-fdbd-498e-8dc2-34b4e05f8b89411b2d8d-5ac5-4095-a191-5a817961d959.png?preset=small-sq)Transportation Services ](https://win.wwu.edu/event/11466358)
+### [WWU Bellingham Art Crawl ![Arts & Music Productions \(AMP\)](https://se-images.campuslabs.com/clink/images/a95c737b-af02-4f89-80a3-2a19915b93fe7abfb1a4-51f7-417a-8628-36db4a61598f.jpg?preset=small-sq)Arts & Music Productions (AMP) ](https://win.wwu.edu/event/11672958)
 ### [Career Center Virtual Drop-Ins ![Career Services](https://se-images.campuslabs.com/clink/images/3badaffb-6249-4cb0-b71a-636ec84da52085ec2605-15cc-496d-8591-87a85636f359.jpg?preset=small-sq)Career Services ](https://win.wwu.edu/event/11612422)
 ### [Explore your Career Path ![Career Services](https://se-images.campuslabs.com/clink/images/3badaffb-6249-4cb0-b71a-636ec84da52085ec2605-15cc-496d-8591-87a85636f359.jpg?preset=small-sq)Career Services ](https://win.wwu.edu/event/11527757)
 ### [Introduction to Bouldering ![Campus Recreation](https://se-images.campuslabs.com/clink/images/1ae43457-1f8e-4125-8de7-24187716879b0f0ded3d-1fef-4966-a3a3-fb9d18ca46bf.jpg?preset=small-sq)Campus Recreation ](https://win.wwu.edu/event/11656660)
 ### [Career Center Virtual Drop-Ins ![Career Services](https://se-images.campuslabs.com/clink/images/3badaffb-6249-4cb0-b71a-636ec84da52085ec2605-15cc-496d-8591-87a85636f359.jpg?preset=small-sq)Career Services ](https://win.wwu.edu/event/11612439)
+### [Queerientation Hosted by 2 organizations ](https://win.wwu.edu/event/11488757)
 ### [Top Rope Climbing Authorization ![Campus Recreation](https://se-images.campuslabs.com/clink/images/1ae43457-1f8e-4125-8de7-24187716879b0f0ded3d-1fef-4966-a3a3-fb9d18ca46bf.jpg?preset=small-sq)Campus Recreation ](https://win.wwu.edu/event/11656725)
 ### [Lead Authorization Climbing Class ![Campus Recreation](https://se-images.campuslabs.com/clink/images/1ae43457-1f8e-4125-8de7-24187716879b0f0ded3d-1fef-4966-a3a3-fb9d18ca46bf.jpg?preset=small-sq)Campus Recreation ](https://win.wwu.edu/event/11656789)
 ### [Career Center Virtual Drop-Ins ![Career Services](https://se-images.campuslabs.com/clink/images/3badaffb-6249-4cb0-b71a-636ec84da52085ec2605-15cc-496d-8591-87a85636f359.jpg?preset=small-sq)Career Services ](https://win.wwu.edu/event/11612459)

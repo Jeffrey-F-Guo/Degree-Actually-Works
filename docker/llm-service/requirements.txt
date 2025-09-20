@@ -1,9 +1,0 @@
-# LLM Service dependencies
-fastapi
-uvicorn[standard]
-pydantic
-python-dotenv
-langchain
-langchain-google-genai
-httpx
-python-multipart
