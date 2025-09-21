@@ -13,6 +13,8 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared_utils.csv_writer import csv_writer
 from shared_utils.llm_init import llm_init
+from shared_utils.llm_batch_processor import llm_ainvoke_batch
+from shared_utils.llm_threaded_processor import llm_ainvoke_threaded_batch
 import research_extractor.config as config
 
 
@@ -72,26 +74,57 @@ async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> L
 
 
 async def extract_professor_information(url_list: List, debug_mode: bool=False):
+    """
+    Extract professor information from a list of URLs using concurrent processing.
+    
+    Args:
+        url_list: List of professor page URLs to process
+        debug_mode: Whether to run in debug mode (non-headless browser)
+        
+    Returns:
+        List of processed professor information dictionaries
+    """
+    logger.info(f"Starting extraction for {len(url_list)} professor URLs")
+    
     prompt_template = ChatPromptTemplate.from_messages(config.get_llm_prompt())
     llm_chain = llm_init(prompt_template, ProfessorPage, model="llama3.2:3b", model_provider="ollama")
     browser_config = BrowserConfig(headless= (not debug_mode))
-    research_info = []
 
-    async with AsyncWebCrawler(config=browser_config) as crawler:
-        # returns a list of crawlerrun objects
-        professor_info_list = await crawler.arun_many(url_list)
-        for i, professor_info in enumerate(professor_info_list):
-            if professor_info.markdown:
-                try: # catch llm errors
-                    logger.info(f"invoking llm for {url_list[i]}")
-                    data = llm_chain.invoke({"markdown": professor_info.markdown})
-                except Exception as e:
-                    logger.error(f"LLM error while extracting info from {url_list[i]}: {e}")
-                if data:
-                    professor_data = data.model_dump()
-                    if professor_data:
-                        professor_data["src_url"] = professor_info.url
-                        research_info.append(professor_data)
+    try:
+        async with AsyncWebCrawler(config=browser_config) as crawler:
+            # returns a list of crawlerrun objects
+            logger.info("Starting concurrent web crawling...")
+            professor_info_list = await crawler.arun_many(url_list)
+            logger.info(f"Completed crawling {len(professor_info_list)} pages")
+            
+            # Extract markdown content and URLs for batch processing
+            markdown_list = []
+            url_list_for_llm = []
+            
+            for professor_info in professor_info_list:
+                if professor_info.markdown:
+                    markdown_list.append(professor_info.markdown)
+                    url_list_for_llm.append(professor_info.url)
+            
+            logger.info(f"Found {len(markdown_list)} pages with content for LLM processing")
+            
+            # Process all LLM calls concurrently
+            if markdown_list:
+                research_info = await llm_ainvoke_threaded_batch(
+                    llm_chain, 
+                    markdown_list, 
+                    url_list_for_llm, 
+                    num_threads=5  # Adjust based on your API rate limits
+                )
+                logger.info(f"Successfully processed {len(research_info)} professor profiles")
+            else:
+                logger.warning("No markdown content found for LLM processing")
+                research_info = []
+                
+    except Exception as e:
+        logger.error(f"Error during professor information extraction: {e}")
+        research_info = []
+            
     return research_info
 
 async def extract_department_research(department_code, debug_mode=False) -> List[dict]:
