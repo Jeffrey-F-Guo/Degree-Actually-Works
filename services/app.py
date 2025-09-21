@@ -12,6 +12,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from research_extractor.research_crawler import extract_research_by_department
 from events_extractor.events_crawler import extract_events
 from courses_extractor.course_crawler import extract_course
+from shared_utils.csv_writer import csv_writer
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,6 +38,16 @@ async def health():
     Health check endpoint.
     """
     return {"message": "WWU Resource Extractor API is running", "status": "healthy"}
+
+@app.get("/logs")
+async def logs():
+    """
+    logs check endpoint.
+    """
+    data = [{"name": "John", "age": 30}, {"name": "Jane", "age": 25}]
+    filename = "log_test.csv"
+    csv_writer(data, filename)
+    return {"message": "WWU Resource Extractor API is running", "status": "logged"}    
 
 @app.get("/extract/research/{department_code}")
 async def extract_research_endpoint(department_code: str):
