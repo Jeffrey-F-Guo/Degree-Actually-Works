@@ -1,0 +1,33 @@
+services:
+  # WWU Resource Extractor API
+  wwu-extractor-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wwu-extractor-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}  # Google Gemini API key
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# To run the service:
+# docker-compose up -d
+#
+# To rebuild and run:
+# docker-compose up --build -d
+#
+# To view logs:
+# docker-compose logs -f
+#
+# To stop:
+# docker-compose down
