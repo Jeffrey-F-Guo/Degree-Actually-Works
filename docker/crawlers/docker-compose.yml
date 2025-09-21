@@ -2,17 +2,18 @@ services:
   # WWU Resource Extractor API
   wwu-extractor-api:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: docker/crawlers/Dockerfile
     container_name: wwu-extractor-api
     restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
-      - ./logs:/app/logs
+      - ../../services/logs:/services/logs
+    env_file:
+      - ../../.env
     environment:
       - PYTHONUNBUFFERED=1
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}  # Google Gemini API key
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

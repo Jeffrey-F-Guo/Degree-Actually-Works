@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # Set work directory
-WORKDIR /app
+WORKDIR /services
 
 # Install system dependencies required for web scraping and Playwright
 RUN apt-get update && apt-get install -y \
@@ -44,17 +44,17 @@ COPY base_requirements.txt .
 RUN pip install --no-cache-dir -r base_requirements.txt
 
 # Copy the application code
-COPY services/ ./services/
+COPY services/ /services/
 
 
 # Install Playwright browsers as the app user
 RUN playwright install chromium
 
 # Create logs directory
-RUN mkdir -p /app/logs
+RUN mkdir -p /services/logs
 
 # Expose the port the app runs on
 EXPOSE 8000
 
 # Set the default command to run the API server
-CMD ["uvicorn", "services.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
