@@ -34,12 +34,13 @@ def get_llm_prompt() -> List[Dict[str, str]]:
                         name: str
                         website: str (optional). Only include URLS that are under the website section. If there is no website section, leave the field empty.
                         research_interest: list (optional) *important note: this must be academic interest. Only record research interests if they are under the research interests section. If there is no research section, leave the list empty*
+                        src_url: str. The URL of the crawled professor's page. This will be given to you.
 
             """
         },
         {
             "role": "user",
-            "content": "{markdown}"
+            "content": ["{markdown}", "{src_url}"]
         }
     ]
 

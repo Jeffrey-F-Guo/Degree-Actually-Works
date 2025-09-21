@@ -14,7 +14,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared_utils.csv_writer import csv_writer
 from shared_utils.llm_init import llm_init
 from shared_utils.llm_batch_processor import llm_ainvoke_batch
-from shared_utils.llm_threaded_processor import llm_ainvoke_threaded_batch
 import research_extractor.config as config
 
 
@@ -27,6 +26,7 @@ class ProfessorPage(BaseModel):
     name: str = Field(..., description="Professor's name")
     website: str = Field("N/A", description="Professor's personal website")
     research_interest: List[str] = Field(default_factory=list, description="List of professor's research interests")
+    src_url: str = Field(..., description="Source URL of the professor's page")
 
 async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> List[str]:
     """
@@ -75,7 +75,7 @@ async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> L
 
 async def extract_professor_information(url_list: List, debug_mode: bool=False):
     """
-    Extract professor information from a list of URLs using concurrent processing.
+    Extract professor information from a list of URLs using async processing.
     
     Args:
         url_list: List of professor page URLs to process
@@ -87,7 +87,7 @@ async def extract_professor_information(url_list: List, debug_mode: bool=False):
     logger.info(f"Starting extraction for {len(url_list)} professor URLs")
     
     prompt_template = ChatPromptTemplate.from_messages(config.get_llm_prompt())
-    llm_chain = llm_init(prompt_template, ProfessorPage, model="llama3.2:3b", model_provider="ollama")
+    llm_chain = llm_init(prompt_template, ProfessorPage, model="gemini-2.5-flash-lite", model_provider="google-genai")
     browser_config = BrowserConfig(headless= (not debug_mode))
 
     try:
@@ -96,25 +96,14 @@ async def extract_professor_information(url_list: List, debug_mode: bool=False):
             logger.info("Starting concurrent web crawling...")
             professor_info_list = await crawler.arun_many(url_list)
             logger.info(f"Completed crawling {len(professor_info_list)} pages")
-            
-            # Extract markdown content and URLs for batch processing
-            markdown_list = []
-            url_list_for_llm = []
-            
-            for professor_info in professor_info_list:
-                if professor_info.markdown:
-                    markdown_list.append(professor_info.markdown)
-                    url_list_for_llm.append(professor_info.url)
-            
-            logger.info(f"Found {len(markdown_list)} pages with content for LLM processing")
+
             
             # Process all LLM calls concurrently
-            if markdown_list:
-                research_info = await llm_ainvoke_threaded_batch(
+            if professor_info_list:
+                research_info = await llm_ainvoke_batch(
                     llm_chain, 
-                    markdown_list, 
-                    url_list_for_llm, 
-                    num_threads=5  # Adjust based on your API rate limits
+                    professor_info_list, 
+                    max_concurrent=5 
                 )
                 logger.info(f"Successfully processed {len(research_info)} professor profiles")
             else:
