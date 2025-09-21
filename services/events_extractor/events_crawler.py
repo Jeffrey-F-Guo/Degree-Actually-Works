@@ -103,7 +103,7 @@ async def crawl_events(base_url: str, debug_mode: bool = False) -> List[EventEnt
 
         try:
             prompt_template = ChatPromptTemplate.from_messages(config.get_llm_prompt())
-            extraction_chain = llm_init(prompt_template, ExtractedEvents, model="gemini-2.5-flash")
+            extraction_chain = llm_init(prompt_template, ExtractedEvents)
             # debugging check
             logger.info("invoke llm")
             output = extraction_chain.invoke({"html": results.html})

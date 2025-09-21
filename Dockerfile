@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # Set work directory
-WORKDIR /app
+WORKDIR /services
 
 # Install system dependencies required for web scraping and Playwright
 RUN apt-get update && apt-get install -y \
@@ -51,7 +51,7 @@ COPY services/ ./services/
 RUN playwright install chromium
 
 # Create logs directory
-RUN mkdir -p /app/logs
+RUN mkdir -p /services/logs
 
 # Expose the port the app runs on
 EXPOSE 8000

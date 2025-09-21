@@ -7,6 +7,7 @@ fastapi
 uvicorn[standard]
 langchain
 langchain-google-genai
+langchain-ollama
 datetime
 python-dateutil
 numpy < 2

@@ -6,7 +6,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-LOGS_PATH = "/app/logs"
+LOGS_PATH = "../logs"
 
 def csv_writer(data: List[Dict], filename: str):
         """

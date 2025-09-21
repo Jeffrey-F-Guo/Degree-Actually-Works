@@ -73,7 +73,7 @@ async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> L
 
 async def extract_professor_information(url_list: List, debug_mode: bool=False):
     prompt_template = ChatPromptTemplate.from_messages(config.get_llm_prompt())
-    llm_chain = llm_init(prompt_template, ProfessorPage)
+    llm_chain = llm_init(prompt_template, ProfessorPage, model="llama3.2:3b", model_provider="ollama")
     browser_config = BrowserConfig(headless= (not debug_mode))
     research_info = []
 
