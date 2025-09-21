@@ -2,11 +2,12 @@ import csv
 from typing import List, Dict
 import logging
 import os
+import sys
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-LOGS_PATH = "../logs"
+LOGS_PATH = './logs'
 
 def csv_writer(data: List[Dict], filename: str):
         """
