@@ -15,6 +15,7 @@ from shared_utils.csv_writer import csv_writer
 from shared_utils.llm_init import llm_init
 from shared_utils.llm_batch_processor import llm_ainvoke_batch
 import research_extractor.config as config
+from shared_utils.db_writer import write_to_db
 
 
 # Configure logging
@@ -73,7 +74,7 @@ async def extract_faculty_urls(department_code:str, debug_mode: bool=False) -> L
         return list(all_pages)
 
 
-async def extract_professor_information(url_list: List, debug_mode: bool=False):
+async def extract_professor_information(url_list: List, debug_mode: bool=False) -> List[dict]:
     """
     Extract professor information from a list of URLs using async processing.
     
@@ -149,6 +150,7 @@ async def extract_research_by_department(department_code: str, debug_mode: bool=
     """
 
     research_info = await extract_department_research(department_code, debug_mode)
+    write_to_db(research_info)
     if research_info and write_to_csv:
         csv_writer(research_info, f"research_{department_code}.csv")
     return research_info
