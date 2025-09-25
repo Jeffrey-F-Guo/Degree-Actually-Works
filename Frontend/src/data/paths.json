@@ -1,0 +1,459 @@
+{
+  "paths": [
+    {
+      "slug": "swe",
+      "name": "Software Engineering (SWE)",
+      "goal": "Build software engineering and development depth.",
+      "summary": "SWE leans on web, databases, mobile, compilers, HCI, and large-team development.",
+      "coreEmphasis": ["CSCI 345 Software Engineering I", "Capstone", "Data Structures & Algorithms"],
+      "groups": [
+        {
+          "title": "Core",
+          "nodes": [
+            { 
+              "id": "algos", 
+              "code": "CSCI 3xx/4xx", 
+              "title": "Data Structures & Algorithms", 
+              "type": "core", 
+              "prereqs": [], 
+              "tags": ["algorithms"],
+              "description": "Fundamental algorithms and data structures essential for software engineering.",
+              "whyMatters": "Forms the foundation for writing efficient, scalable software systems."
+            },
+            { 
+              "id": "se1", 
+              "code": "CSCI 345", 
+              "title": "Software Engineering I", 
+              "type": "core", 
+              "prereqs": ["algos"], 
+              "tags": ["process","teams"],
+              "description": "Software development lifecycle, team collaboration, and engineering practices.",
+              "whyMatters": "Essential for working in professional development teams and managing large codebases."
+            },
+            { 
+              "id": "cap", 
+              "code": "Capstone", 
+              "title": "Senior Capstone", 
+              "type": "core", 
+              "prereqs": ["se1"], 
+              "tags": ["project","teams"],
+              "description": "Year-long senior project demonstrating comprehensive CS skills.",
+              "whyMatters": "Showcases your ability to design, implement, and deliver a complete software system."
+            }
+          ]
+        },
+        {
+          "title": "Recommended Electives",
+          "nodes": [
+            { 
+              "id": "web-scripting", 
+              "code": "CSCI 342", 
+              "title": "Web Scripting", 
+              "type": "elective", 
+              "prereqs": [], 
+              "tags": ["web","frontend"],
+              "description": "Client-side web development with JavaScript, HTML, CSS, and modern frameworks.",
+              "whyMatters": "Web development is essential for most SWE roles in today's digital landscape."
+            },
+            { 
+              "id": "prog-ws", 
+              "code": "CSCI 343", 
+              "title": "Programming Workshop", 
+              "type": "elective", 
+              "prereqs": ["algos"], 
+              "tags": ["coding","practice"],
+              "description": "Intensive programming practice and problem-solving skills development.",
+              "whyMatters": "Strengthens coding interview skills and algorithmic thinking."
+            },
+            { 
+              "id": "mobile", 
+              "code": "CSCI 412", 
+              "title": "Mobile Device Programming", 
+              "type": "elective", 
+              "prereqs": ["web-scripting"], 
+              "tags": ["mobile","apps"],
+              "description": "Native and cross-platform mobile application development.",
+              "whyMatters": "Mobile development is a high-demand skill across all industries."
+            },
+            { 
+              "id": "db-theory", 
+              "code": "CSCI 430", 
+              "title": "Database Theory", 
+              "type": "elective", 
+              "prereqs": ["algos"], 
+              "tags": ["databases"],
+              "description": "Database design, SQL, normalization, and transaction management.",
+              "whyMatters": "Nearly all software systems require efficient data storage and retrieval."
+            },
+            { 
+              "id": "adv-web", 
+              "code": "CSCI 442", 
+              "title": "Advanced Web Programming", 
+              "type": "elective", 
+              "prereqs": ["web-scripting"], 
+              "tags": ["web","backend"],
+              "description": "Server-side development, APIs, authentication, and full-stack architecture.",
+              "whyMatters": "Critical for building complete web applications and microservices."
+            },
+            { 
+              "id": "compilers", 
+              "code": "CSCI 450", 
+              "title": "Compilers", 
+              "type": "elective", 
+              "prereqs": ["algos"], 
+              "tags": ["systems","languages"],
+              "description": "Language design, parsing, code generation, and optimization techniques.",
+              "whyMatters": "Deepens understanding of programming languages and system-level optimization."
+            },
+            { 
+              "id": "hcd", 
+              "code": "CSCI 426", 
+              "title": "Human-Centered Tech Design", 
+              "type": "elective", 
+              "prereqs": [], 
+              "tags": ["UX","HCI"],
+              "description": "User experience design, usability testing, and human-computer interaction.",
+              "whyMatters": "Software engineers must understand user needs to build effective products."
+            },
+            { 
+              "id": "social-good", 
+              "code": "CSCI 436", 
+              "title": "Technology for Social Good", 
+              "type": "elective", 
+              "prereqs": ["se1"], 
+              "tags": ["product","teams"],
+              "description": "Applying technology to address social challenges and ethical considerations.",
+              "whyMatters": "Develops awareness of technology's societal impact and responsible development."
+            }
+          ]
+        }
+      ],
+      "wwuLinks": [
+        "https://cs.wwu.edu/",
+        "https://cs.wwu.edu/resources-and-information",
+        "https://cs.wwu.edu/computer-science-departmental-scholarship-awards",
+        "https://support.cs.wwu.edu/home/survival_guide/index.html"
+      ]
+    },
+    {
+      "slug": "ml",
+      "name": "Machine Learning (ML)",
+      "goal": "Focus on artificial intelligence, modeling, and applied math.",
+      "summary": "ML electives cluster around AI, deep learning, NLP, vision, statistics, and optimization.",
+      "coreEmphasis": ["Core CS sequence incl. Algorithms & OS", "Applied Machine Learning Comprehensive Major (optional)"],
+      "groups": [
+        {
+          "title": "CS + DS ML Courses",
+          "nodes": [
+            { 
+              "id": "ai", 
+              "code": "CSCI 402", 
+              "title": "Artificial Intelligence", 
+              "type": "core", 
+              "prereqs": ["algos"], 
+              "tags": ["AI","search"],
+              "description": "Search algorithms, knowledge representation, planning, and basic machine learning.",
+              "whyMatters": "Foundation for all AI/ML specializations and intelligent system development."
+            },
+            { 
+              "id": "nlp", 
+              "code": "CSCI 404", 
+              "title": "Natural Language Processing", 
+              "type": "elective", 
+              "prereqs": ["ai"], 
+              "tags": ["NLP"],
+              "description": "Text processing, language models, sentiment analysis, and conversational AI.",
+              "whyMatters": "NLP powers chatbots, search engines, and language understanding systems."
+            },
+            { 
+              "id": "adv-ml", 
+              "code": "CSCI 471", 
+              "title": "Advanced ML", 
+              "type": "elective", 
+              "prereqs": ["ai"], 
+              "tags": ["ML"],
+              "description": "Advanced machine learning algorithms, ensemble methods, and model evaluation.",
+              "whyMatters": "Deepens ML expertise for building production-ready predictive systems."
+            },
+            { 
+              "id": "cv", 
+              "code": "CSCI 476", 
+              "title": "Computer Vision", 
+              "type": "elective", 
+              "prereqs": ["ai"], 
+              "tags": ["vision"],
+              "description": "Image processing, feature detection, object recognition, and neural networks for vision.",
+              "whyMatters": "Computer vision drives autonomous vehicles, medical imaging, and AR/VR."
+            },
+            { 
+              "id": "dm", 
+              "code": "CSCI 477", 
+              "title": "Data Mining", 
+              "type": "elective", 
+              "prereqs": ["ai"], 
+              "tags": ["data"],
+              "description": "Pattern discovery, clustering, association rules, and large-scale data analysis.",
+              "whyMatters": "Essential for extracting insights from big data in business and research."
+            },
+            { 
+              "id": "slp", 
+              "code": "CSCI 479", 
+              "title": "Spoken Language Processing", 
+              "type": "elective", 
+              "prereqs": ["nlp"], 
+              "tags": ["speech"],
+              "description": "Speech recognition, synthesis, and audio signal processing.",
+              "whyMatters": "Powers voice assistants, transcription services, and accessibility tools."
+            },
+            { 
+              "id": "dl", 
+              "code": "CSCI 481", 
+              "title": "Deep Learning", 
+              "type": "elective", 
+              "prereqs": ["adv-ml"], 
+              "tags": ["DL"],
+              "description": "Neural networks, backpropagation, CNNs, RNNs, and transformer architectures.",
+              "whyMatters": "Deep learning is the foundation of modern AI breakthroughs and applications."
+            },
+            { 
+              "id": "neuro", 
+              "code": "CSCI 482", 
+              "title": "Computational Neuroscience", 
+              "type": "elective", 
+              "prereqs": ["adv-ml"], 
+              "tags": ["neuro"],
+              "description": "Brain modeling, neural computation, and biologically-inspired algorithms.",
+              "whyMatters": "Bridges neuroscience and AI for brain-computer interfaces and cognitive modeling."
+            },
+            { 
+              "id": "data-471", 
+              "code": "DATA 471", 
+              "title": "Machine Learning Algorithms", 
+              "type": "elective", 
+              "prereqs": ["ai"], 
+              "tags": ["ML"],
+              "description": "Statistical learning theory, optimization, and algorithmic implementation.",
+              "whyMatters": "Provides mathematical foundations for understanding and improving ML systems."
+            }
+          ]
+        },
+        {
+          "title": "Math & Statistics (recommended)",
+          "nodes": [
+            { 
+              "id": "math-443", 
+              "code": "MATH 443", 
+              "title": "Probability/Statistics", 
+              "type": "elective", 
+              "prereqs": [], 
+              "tags": ["stats"],
+              "description": "Probability theory, statistical distributions, and hypothesis testing.",
+              "whyMatters": "Statistical foundations are crucial for understanding ML algorithms and data analysis."
+            },
+            { 
+              "id": "math-444", 
+              "code": "MATH 444", 
+              "title": "Statistical Modeling", 
+              "type": "elective", 
+              "prereqs": ["math-443"], 
+              "tags": ["stats","modeling"],
+              "description": "Linear models, generalized linear models, and statistical inference.",
+              "whyMatters": "Statistical modeling provides interpretable alternatives to black-box ML methods."
+            },
+            { 
+              "id": "math-445", 
+              "code": "MATH 445", 
+              "title": "Regression/ANOVA", 
+              "type": "elective", 
+              "prereqs": ["math-443"], 
+              "tags": ["stats"],
+              "description": "Regression analysis, analysis of variance, and experimental design.",
+              "whyMatters": "Essential for data science roles and validating ML model performance."
+            },
+            { 
+              "id": "math-447", 
+              "code": "MATH 447", 
+              "title": "Time Series", 
+              "type": "elective", 
+              "prereqs": ["math-444"], 
+              "tags": ["stats"],
+              "description": "Temporal data analysis, forecasting, and sequential pattern recognition.",
+              "whyMatters": "Time series analysis is crucial for financial modeling and trend prediction."
+            },
+            { 
+              "id": "math-456", 
+              "code": "MATH 456", 
+              "title": "Optimization", 
+              "type": "elective", 
+              "prereqs": [], 
+              "tags": ["optimization"],
+              "description": "Linear programming, convex optimization, and gradient-based methods.",
+              "whyMatters": "Optimization is the mathematical core of machine learning training algorithms."
+            },
+            { 
+              "id": "math-457", 
+              "code": "MATH 457", 
+              "title": "Numerical Analysis I", 
+              "type": "elective", 
+              "prereqs": [], 
+              "tags": ["numerical"],
+              "description": "Numerical algorithms, error analysis, and computational mathematics.",
+              "whyMatters": "Numerical methods are essential for implementing ML algorithms efficiently."
+            },
+            { 
+              "id": "math-458", 
+              "code": "MATH 458", 
+              "title": "Numerical Analysis II", 
+              "type": "elective", 
+              "prereqs": ["math-457"], 
+              "tags": ["numerical"],
+              "description": "Advanced numerical methods, partial differential equations, and simulation.",
+              "whyMatters": "Advanced numerical techniques support complex modeling and simulation tasks."
+            }
+          ]
+        }
+      ],
+      "wwuLinks": [
+        "https://cs.wwu.edu/",
+        "https://cs.wwu.edu/resources-and-information",
+        "https://cs.wwu.edu/computer-science-departmental-scholarship-awards",
+        "https://support.cs.wwu.edu/home/survival_guide/index.html"
+      ]
+    },
+    {
+      "slug": "it",
+      "name": "IT / Systems & Networks",
+      "goal": "Systems, networks, and infrastructure skills.",
+      "summary": "IT electives cluster around networks, security, forensics, systems, and databases.",
+      "coreEmphasis": ["Operating Systems (CSCI 330)", "Networks I (CSCI 367)", "Algorithms"],
+      "groups": [
+        {
+          "title": "Core",
+          "nodes": [
+            { 
+              "id": "algos-it", 
+              "code": "CSCI 3xx/4xx", 
+              "title": "Algorithms (prep)", 
+              "type": "core", 
+              "prereqs": [], 
+              "tags": ["algorithms"],
+              "description": "Fundamental algorithms and data structures for systems programming.",
+              "whyMatters": "Algorithmic thinking is essential for optimizing system performance and security."
+            },
+            { 
+              "id": "os", 
+              "code": "CSCI 330", 
+              "title": "Operating Systems", 
+              "type": "core", 
+              "prereqs": ["algos-it"], 
+              "tags": ["OS"],
+              "description": "Process management, memory management, file systems, and system calls.",
+              "whyMatters": "OS knowledge is fundamental for systems administration and security analysis."
+            },
+            { 
+              "id": "net1", 
+              "code": "CSCI 367", 
+              "title": "Computer Networks I", 
+              "type": "core", 
+              "prereqs": ["os"], 
+              "tags": ["networks"],
+              "description": "Network protocols, TCP/IP, routing, and network programming.",
+              "whyMatters": "Network understanding is crucial for IT infrastructure and cybersecurity roles."
+            }
+          ]
+        },
+        {
+          "title": "Recommended Electives",
+          "nodes": [
+            { 
+              "id": "forensics", 
+              "code": "CSCI 421", 
+              "title": "Computer Forensics", 
+              "type": "elective", 
+              "prereqs": ["os"], 
+              "tags": ["security","forensics"],
+              "description": "Digital evidence collection, analysis techniques, and legal considerations.",
+              "whyMatters": "Digital forensics is essential for incident response and cybercrime investigation."
+            },
+            { 
+              "id": "sec", 
+              "code": "CSCI 461", 
+              "title": "Computer Security", 
+              "type": "elective", 
+              "prereqs": ["net1"], 
+              "tags": ["security"],
+              "description": "Security principles, vulnerabilities, encryption, and access control.",
+              "whyMatters": "Cybersecurity skills are in high demand across all IT and development roles."
+            },
+            { 
+              "id": "drivers", 
+              "code": "CSCI 462", 
+              "title": "OS Device Drivers", 
+              "type": "elective", 
+              "prereqs": ["os"], 
+              "tags": ["systems"],
+              "description": "Low-level programming, hardware interfaces, and kernel module development.",
+              "whyMatters": "Driver development provides deep systems knowledge for embedded and IoT systems."
+            },
+            { 
+              "id": "cyberdef", 
+              "code": "CSCI 463", 
+              "title": "Cyber Defense", 
+              "type": "elective", 
+              "prereqs": ["sec"], 
+              "tags": ["security"],
+              "description": "Intrusion detection, incident response, and defensive security strategies.",
+              "whyMatters": "Cyber defense is critical for protecting organizational infrastructure and data."
+            },
+            { 
+              "id": "net2", 
+              "code": "CSCI 467", 
+              "title": "Networks II", 
+              "type": "elective", 
+              "prereqs": ["net1"], 
+              "tags": ["networks"],
+              "description": "Advanced networking, network design, and performance optimization.",
+              "whyMatters": "Advanced networking skills are essential for designing scalable IT infrastructure."
+            },
+            { 
+              "id": "crypto", 
+              "code": "M/CS 478", 
+              "title": "Fundamentals of Cryptography", 
+              "type": "elective", 
+              "prereqs": ["algos-it"], 
+              "tags": ["crypto"],
+              "description": "Cryptographic algorithms, protocols, and mathematical foundations.",
+              "whyMatters": "Cryptography is fundamental to modern security and privacy protection."
+            },
+            { 
+              "id": "parallel", 
+              "code": "CSCI 415", 
+              "title": "Parallel Computation", 
+              "type": "elective", 
+              "prereqs": ["os"], 
+              "tags": ["distributed"],
+              "description": "Parallel algorithms, distributed systems, and high-performance computing.",
+              "whyMatters": "Parallel computing is essential for modern scalable and distributed systems."
+            },
+            { 
+              "id": "db-it", 
+              "code": "CSCI 430", 
+              "title": "Database Theory", 
+              "type": "elective", 
+              "prereqs": [], 
+              "tags": ["databases"],
+              "description": "Database administration, performance tuning, and distributed databases.",
+              "whyMatters": "Database skills are crucial for IT infrastructure and data management roles."
+            }
+          ]
+        }
+      ],
+      "wwuLinks": [
+        "https://cs.wwu.edu/",
+        "https://cs.wwu.edu/resources-and-information",
+        "https://cs.wwu.edu/computer-science-departmental-scholarship-awards",
+        "https://support.cs.wwu.edu/home/survival_guide/index.html"
+      ]
+    }
+  ]
+}

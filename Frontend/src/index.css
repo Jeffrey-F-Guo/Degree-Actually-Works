@@ -1,69 +1,152 @@
-@import "tailwindcss";
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+/* WWU CS Roadmaps Design System - All colors MUST be HSL */
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    /* WWU CS Brand Colors */
+    --wwu-primary: 211 68% 21%; /* #0B2D5C - WWU Dark Blue */
+    --wwu-primary-light: 211 68% 35%; /* #133b78 - Lighter blue */
+    --wwu-primary-foreground: 0 0% 100%; /* White text on blue */
+    
+    /* Core Design System */
+    --background: 0 0% 100%; /* Pure white */
+    --foreground: 215 25% 27%; /* Deep slate for readability */
+    
+    --surface: 210 40% 98%; /* #f7f9fc - Light surface */
+    --surface-foreground: 215 25% 27%;
+    
+    --muted: 210 20% 90%; /* #e6ecf5 - Muted backgrounds */
+    --muted-foreground: 215 15% 50%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+    
+    /* Status Colors */
+    --success: 142 76% 36%; /* Green for completed */
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 45 93% 47%; /* Orange for in progress */
+    --warning-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Interactive Elements */
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 211 68% 21%;
+    
+    /* Graph Node Colors */
+    --node-core: 211 68% 21%; /* WWU blue for core courses */
+    --node-elective: 215 15% 50%; /* Gray for electives */
+    --node-completed: 142 76% 36%; /* Green for completed */
+    --node-progress: 45 93% 47%; /* Orange for in progress */
+    
+    /* Shadows and Effects */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    
+    --radius: 0.75rem;
+    
+    /* Legacy mappings for shadcn compatibility */
+    --primary: 211 68% 21%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 98%;
+    --secondary-foreground: 215 25% 27%;
+    --accent: 210 20% 90%;
+    --accent-foreground: 215 25% 27%;
   }
-  a:hover {
-    color: #747bff;
+
+  .dark {
+    /* Dark mode preserves WWU blue but inverts backgrounds */
+    --background: 215 25% 8%;
+    --foreground: 0 0% 95%;
+    
+    --surface: 215 25% 12%;
+    --surface-foreground: 0 0% 95%;
+    
+    --muted: 215 25% 15%;
+    --muted-foreground: 0 0% 70%;
+    
+    --card: 215 25% 12%;
+    --card-foreground: 0 0% 95%;
+    
+    --border: 215 25% 20%;
+    --input: 215 25% 20%;
+    
+    /* Keep WWU blue consistent */
+    --wwu-primary: 211 68% 21%;
+    --wwu-primary-light: 211 68% 35%;
+    
+    /* Legacy mappings */
+    --primary: 211 68% 21%;
+    --secondary: 215 25% 15%;
+    --secondary-foreground: 0 0% 95%;
+    --accent: 215 25% 20%;
+    --accent-foreground: 0 0% 95%;
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  /* Graph styles */
+  .react-flow__node {
+    @apply rounded-lg shadow-md transition-all duration-200;
+  }
+  
+  .react-flow__node.selected {
+    @apply ring-2 ring-ring;
+  }
+  
+  .react-flow__edge-path {
+    stroke: hsl(var(--muted-foreground));
+    stroke-width: 2;
+  }
+  
+  .react-flow__arrowhead {
+    fill: hsl(var(--muted-foreground));
+  }
+  
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 3px;
+  }
+}
+
+@layer utilities {
+  .text-wwu-primary {
+    color: hsl(var(--wwu-primary));
+  }
+  
+  .bg-wwu-primary {
+    background-color: hsl(var(--wwu-primary));
+  }
+  
+  .border-wwu-primary {
+    border-color: hsl(var(--wwu-primary));
   }
 }

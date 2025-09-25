@@ -9,3 +9,5 @@ venv/
 
 *.csv
 *.html
+
+frontend/node_modules
