@@ -1,8 +1,9 @@
 from typing import List, Dict
 
+
 def get_base_url() -> str:
     """
-    Get the base URL for WWU events page with all categories.
+    Get the seed URL to start crawling from
     """
     return "https://win.wwu.edu/events/?categories=9821&categories=17934&categories=21914&categories=9822&categories=11780&categories=23412&categories=9830"
 
