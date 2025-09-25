@@ -53,3 +53,18 @@ async def llm_ainvoke_batch(llm_chain, professor_info_list, max_concurrent=5):
                 processed_results.append(professor_data)
     
     return processed_results
+
+async def llm_ainvoke_batch_courses(llm_chain, course_info_list, max_concurrent=5):
+    """
+    Process multiple LLM calls concurrently with rate limiting.
+    
+    Args:
+        llm_chain: The LLM chain to use
+        course_info_list: List of CrawlerResult objects with .markdown and .url attributes
+        max_concurrent: Maximum number of concurrent LLM calls
+    
+    Returns:
+        List of processed results
+    """
+    semaphore = asyncio.Semaphore(max_concurrent)
+    

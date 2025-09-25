@@ -31,7 +31,7 @@ def write_to_db(data):
         port="5432"
     )
     cursor = conn.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS research (id SERIAL PRIMARY KEY, name VARCHAR(255), website VARCHAR(255), research_interest VARCHAR(255), src_url VARCHAR(255))")
+    cursor.execute("CREATE TABLE IF NOT EXISTS research (id SERIAL PRIMARY KEY, name VARCHAR(255), website VARCHAR(255), research_interest VARCHAR(500), src_url VARCHAR(255))")
     for item in data:
         cursor.execute("INSERT INTO research (name, website, research_interest, src_url) VALUES (%s, %s, %s, %s)", (item["name"], item["website"], item["research_interest"], item["src_url"]))
     conn.commit()
