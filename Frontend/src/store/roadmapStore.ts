@@ -9,6 +9,8 @@ interface RoadmapState {
   isNodeDrawerOpen: boolean;
   searchQuery: string;
   hiddenGroups: string[];
+  isAuthenticated: boolean;
+  userId: string | null;
   
   // Actions
   setCurrentPath: (path: RoadmapPath) => void;
@@ -24,6 +26,12 @@ interface RoadmapState {
   importProgress: (pathSlug: string, data: string) => boolean;
   generateShareableUrl: (pathSlug: string) => string;
   loadFromShareableUrl: (url: string) => boolean;
+  
+  // Backend integration actions (placeholders)
+  setAuthState: (isAuthenticated: boolean, userId?: string) => void;
+  syncProgressToBackend: (pathSlug: string) => Promise<boolean>;
+  loadProgressFromBackend: (pathSlug: string) => Promise<boolean>;
+  loadPathsFromBackend: () => Promise<RoadmapPath[]>;
 }
 
 export const useRoadmapStore = create<RoadmapState>()(
@@ -35,6 +43,8 @@ export const useRoadmapStore = create<RoadmapState>()(
       isNodeDrawerOpen: false,
       searchQuery: '',
       hiddenGroups: [],
+      isAuthenticated: false,
+      userId: null,
 
       setCurrentPath: (path) => set({ currentPath: path }),
 
@@ -170,12 +180,63 @@ export const useRoadmapStore = create<RoadmapState>()(
           return false;
         }
       },
+
+      // Backend integration actions (placeholders)
+      setAuthState: (isAuthenticated, userId) => 
+        set({ isAuthenticated, userId: userId || null }),
+
+      syncProgressToBackend: async (pathSlug) => {
+        // TODO: Implement API call to save progress
+        const progress = get().userProgress[pathSlug];
+        const userId = get().userId;
+        
+        if (!userId || !progress) return false;
+        
+        try {
+          // Placeholder for API call
+          console.log('Syncing progress to backend:', { pathSlug, userId, progress });
+          return true;
+        } catch (error) {
+          console.error('Failed to sync progress:', error);
+          return false;
+        }
+      },
+
+      loadProgressFromBackend: async (pathSlug) => {
+        // TODO: Implement API call to load progress
+        const userId = get().userId;
+        
+        if (!userId) return false;
+        
+        try {
+          // Placeholder for API call
+          console.log('Loading progress from backend:', { pathSlug, userId });
+          return true;
+        } catch (error) {
+          console.error('Failed to load progress:', error);
+          return false;
+        }
+      },
+
+      loadPathsFromBackend: async () => {
+        // TODO: Implement API call to load paths
+        try {
+          // Placeholder for API call
+          console.log('Loading paths from backend');
+          return [];
+        } catch (error) {
+          console.error('Failed to load paths:', error);
+          return [];
+        }
+      },
     }),
     {
-      name: 'wwu-cs-roadmaps-storage',
+      name: 'roadmap-storage',
       partialize: (state) => ({
         userProgress: state.userProgress,
         hiddenGroups: state.hiddenGroups,
+        isAuthenticated: state.isAuthenticated,
+        userId: state.userId,
       }),
     }
   )

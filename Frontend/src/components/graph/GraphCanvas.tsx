@@ -222,7 +222,7 @@ const GraphCanvasInner = ({ path }: GraphCanvasProps) => {
               case 'completed': return 'hsl(var(--success))';
               case 'in-progress': return 'hsl(var(--warning))';
               case 'skipped': return 'hsl(var(--muted-foreground))';
-              default: return 'hsl(var(--wwu-primary))';
+              default: return 'hsl(var(--primary))';
             }
           }}
         />

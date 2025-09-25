@@ -200,7 +200,7 @@ export const ChecklistPanel = ({ path, className }: ChecklistPanelProps) => {
                                 {node.type === 'core' ? 'Core' : 'Elective'}
                               </Badge>
                             </div>
-                            <div className="text-sm font-medium text-foreground group-hover:text-wwu-primary transition-colors">
+                            <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
                               {node.title}
                             </div>
                             {node.tags.length > 0 && (

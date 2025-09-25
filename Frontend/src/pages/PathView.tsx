@@ -3,12 +3,8 @@ import { useParams, useSearchParams, Navigate } from 'react-router-dom';
 import { GraphCanvas } from '@/components/graph/GraphCanvas';
 import { ChecklistPanel } from '@/components/checklist/ChecklistPanel';
 import { NodeDrawer } from '@/components/node/NodeDrawer';
-import { TopNav } from '@/components/layout/TopNav';
 import { useRoadmapStore } from '@/store/roadmapStore';
-import { Button } from '@/components/ui/button';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { Sidebar, Menu } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { RoadmapPath } from '@/types/roadmap';
 
 // Import the paths data
@@ -44,8 +40,6 @@ export const PathView = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <TopNav currentPath={currentPath} allPaths={pathsData.paths as RoadmapPath[]} />
-      
       <div className="flex-1 overflow-hidden">
         <PanelGroup direction="horizontal" className="h-full">
           {/* Main Graph Area */}

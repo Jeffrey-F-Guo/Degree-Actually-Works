@@ -2,14 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* WWU CS Roadmaps Design System - All colors MUST be HSL */
+/* Roadmap Design System - All colors MUST be HSL */
 
 @layer base {
   :root {
-    /* WWU CS Brand Colors */
-    --wwu-primary: 211 68% 21%; /* #0B2D5C - WWU Dark Blue */
-    --wwu-primary-light: 211 68% 35%; /* #133b78 - Lighter blue */
-    --wwu-primary-foreground: 0 0% 100%; /* White text on blue */
+    /* Primary Brand Colors */
+    --primary: 211 68% 21%; /* Dark Blue */
+    --primary-light: 211 68% 35%; /* Lighter blue */
+    --primary-foreground: 0 0% 100%; /* White text on blue */
     
     /* Core Design System */
     --background: 0 0% 100%; /* Pure white */
@@ -81,12 +81,9 @@
     --border: 215 25% 20%;
     --input: 215 25% 20%;
     
-    /* Keep WWU blue consistent */
-    --wwu-primary: 211 68% 21%;
-    --wwu-primary-light: 211 68% 35%;
-    
-    /* Legacy mappings */
+    /* Keep primary blue consistent */
     --primary: 211 68% 21%;
+    --primary-light: 211 68% 35%;
     --secondary: 215 25% 15%;
     --secondary-foreground: 0 0% 95%;
     --accent: 215 25% 20%;
@@ -138,15 +135,15 @@
 }
 
 @layer utilities {
-  .text-wwu-primary {
-    color: hsl(var(--wwu-primary));
+  .text-primary-brand {
+    color: hsl(var(--primary));
   }
   
-  .bg-wwu-primary {
-    background-color: hsl(var(--wwu-primary));
+  .bg-primary-brand {
+    background-color: hsl(var(--primary));
   }
   
-  .border-wwu-primary {
-    border-color: hsl(var(--wwu-primary));
+  .border-primary-brand {
+    border-color: hsl(var(--primary));
   }
 }

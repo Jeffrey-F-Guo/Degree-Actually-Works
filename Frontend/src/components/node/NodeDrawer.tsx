@@ -148,7 +148,7 @@ export const NodeDrawer = ({ path }: NodeDrawerProps) => {
                     onClick={() => setNodeStatus(path.slug, selectedNode.id, status)}
                     className={cn(
                       "justify-start gap-2",
-                      isSelected && "bg-wwu-primary hover:bg-wwu-primary/90"
+                      isSelected && "bg-primary hover:bg-primary/90"
                     )}
                   >
                     <StatusIcon className={cn(
