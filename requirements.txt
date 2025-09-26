@@ -13,3 +13,6 @@ python-dateutil
 numpy < 2
 beautifulsoup4
 psycopg2-binary
+
+django
+httpx
