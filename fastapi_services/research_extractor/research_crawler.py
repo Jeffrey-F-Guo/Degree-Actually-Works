@@ -9,13 +9,11 @@ from typing import List, Dict
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from shared_utils.csv_writer import csv_writer
-from shared_utils.llm_init import llm_init
-from shared_utils.llm_batch_processor import llm_ainvoke_batch
-import research_extractor.config as config
-from shared_utils.db_writer import write_to_db
+from shared_utils import csv_writer
+from shared_utils import llm_init
+from shared_utils import llm_ainvoke_batch
+from research_extractor import config
+from shared_utils import write_to_db
 
 
 # Configure logging

@@ -2,7 +2,6 @@ import asyncio
 import os
 import logging
 import csv
-import sys
 import re
 from bs4 import BeautifulSoup
 
@@ -14,10 +13,9 @@ from typing import List, Dict
 from urllib.parse import urljoin, urlparse
 
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from shared_utils.csv_writer import csv_writer
-from shared_utils.llm_init import llm_init
-import events_extractor.config as config
+from shared_utils import csv_writer
+from shared_utils import llm_init
+from events_extractor import config
 
 
 logging.basicConfig(level=logging.INFO)
