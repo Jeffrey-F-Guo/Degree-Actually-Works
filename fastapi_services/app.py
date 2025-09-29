@@ -1,18 +1,16 @@
 from fastapi import FastAPI, HTTPException
 import asyncio
 import logging
-import sys
 import os
 from typing import List, Dict, Any
 
 # Add the services directory to Python path to fix import issues
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import all extractor functions
-from research_extractor.research_crawler import extract_research_by_department
-from events_extractor.events_crawler import extract_events
-from courses_extractor.course_crawler import extract_course
-from shared_utils.csv_writer import csv_writer
+from research_extractor import extract_research_by_department
+from events_extractor import extract_events
+from courses_extractor import extract_course
+from shared_utils import csv_writer
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
