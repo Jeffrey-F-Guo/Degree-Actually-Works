@@ -9,6 +9,12 @@ from typing import List, Dict
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 
+import sys
+import os
+
+# Add the fastapi_services directory to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from shared_utils import csv_writer
 from shared_utils import llm_init
 from shared_utils import llm_ainvoke_batch
@@ -154,4 +160,5 @@ async def extract_research_by_department(department_code: str, debug_mode: bool=
     return research_info
 
 if __name__ == "__main__":
-    asyncio.run(extract_research_by_department("CSCI", debug_mode=False, write_to_csv=True))
+    res = asyncio.run(extract_research_by_department("CSCI", debug_mode=False, write_to_csv=True))
+    print(res)

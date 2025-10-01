@@ -117,12 +117,13 @@ async def exract_courses_endpoint(department_code: str):
     """
     logger.info(f"Received request to extract courses for department: {department_code}")
     try:
-        courses = await extract_course(department_code, debug_mode=False),
-
+        courses = await extract_course(department_code, debug_mode=False)
+        print(type(courses[0]))
         if not courses:
             logger.warning("No courses found")
             raise HTTPException(status_code=404, detail="No courses found for the specified department")
         logger.info({"message": "Courses extracted successfully", "count": len(courses) if courses else 0})
+        
         return courses
     except asyncio.TimeoutError:
         logger.error(f"Course extraction timed out for department: {department_code}")

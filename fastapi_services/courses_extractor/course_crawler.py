@@ -9,6 +9,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from typing import List, Dict
 
+import sys
+import os
+
+# Add the fastapi_services directory to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from shared_utils import csv_writer
 from shared_utils import llm_init
 from shared_utils import write_to_db
@@ -84,23 +90,26 @@ async def crawl_courses(department_code: str, debug_mode: bool) -> List:
             return []
         try:
             llm = llm_init(prompt_template, courseInfo, "gemini-2.5-flash-lite", "google-genai")
-            for entry in markdown_list:
-                logger.info("invoking markdown extraction")
+            for i, entry in enumerate(markdown_list):
+                logger.info(f"invoking markdown extraction {i}")
                 course = llm.invoke({"markdown": entry})
                 course_list.append(course.model_dump())
 
         except Exception as e:
             logger.error(f"LLM error extracting courses: {e}")
             return []
-
+    
     return course_list
 
 async def extract_course(department_code: str, debug_mode: bool=False):
     course_info = await crawl_courses(department_code, debug_mode)
     if course_info:
         csv_writer(course_info, f"{department_code}_courses.csv")
+    print(type(course_info[0]))
+
     return course_info
 
 
 if __name__ == "__main__":
-    asyncio.run(extract_course("CSCI", debug_mode=True))
+    res = asyncio.run(extract_course("CSCI", debug_mode=True))
+    print(res)

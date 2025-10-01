@@ -12,7 +12,11 @@ from pydantic import BaseModel, Field
 from typing import List, Dict
 from urllib.parse import urljoin, urlparse
 
+import sys
+import os
 
+# Add the fastapi_services directory to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared_utils import csv_writer
 from shared_utils import llm_init
 from events_extractor import config
