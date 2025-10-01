@@ -7,4 +7,5 @@ urlpatterns = [
     # Health check
     path('health/', views.health_check, name='health_check'),
     path('research/<str:department>/', views.get_research_data, name='get_research_data'),
+    path('course/<str:department>/', views.get_course_data, name='get_course_data')
 ]

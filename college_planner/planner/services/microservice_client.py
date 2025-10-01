@@ -1,6 +1,9 @@
 from django.conf import settings
 import httpx
+import logging
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class MicroserviceClient:
     def __init__(self):
@@ -12,6 +15,16 @@ class MicroserviceClient:
         response = httpx.get(url, timeout=self.timeout)
         # response.raise_for_status()
         return response.json()
+    
+    def get_course(self, department_code: str):
+        url = f"{self.base_url}/extract/courses/{department_code}"
+        try:
+            response = httpx.get(url, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            logger.error(f"Error occurred while getting course data: {e}")
+
 
     def test_connection(self):
         url = f"{self.base_url}/health"

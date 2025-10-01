@@ -5,6 +5,9 @@ from django.views.decorators.http import require_http_methods
 from .services.data_processor import DataProcessor
 from .services.microservice_client import MicroserviceClient
 import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 # Create your views here.
 @require_http_methods(["GET"])
 def health_check(request):
@@ -56,3 +59,29 @@ def get_research_data(request, department):
             'department': department,
             'error': str(e)
         }, status=500)
+    
+@require_http_methods(["GET"])
+def get_course_data(request, department):
+    """
+    Get course data for a given department.
+    
+    GET /api/course/
+    """
+
+    try:
+        client = MicroserviceClient()
+        course_data = client.get_course(department)
+        return JsonResponse({
+            'status': 'success',
+            'department': department,
+            'count': len(course_data),
+            'data': course_data
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting course data for {department}")
+        return JsonResponse({
+            'status': 'error',
+            'department': department,
+            'error': e
+        })
