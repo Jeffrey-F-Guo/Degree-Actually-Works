@@ -25,6 +25,15 @@ class MicroserviceClient:
         except httpx.HTTPError as e:
             logger.error(f"Error occurred while getting course data: {e}")
 
+    def get_events(self):
+        url = f"{self.base_url}/extract/events"
+        try:
+            response = httpx.get(url, timeout=self.timeout)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            logger.error(f"Error occured while getting events {e}")
+    
 
     def test_connection(self):
         url = f"{self.base_url}/health"

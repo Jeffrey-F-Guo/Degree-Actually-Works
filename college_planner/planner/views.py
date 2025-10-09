@@ -85,3 +85,29 @@ def get_course_data(request, department):
             'department': department,
             'error': e
         })
+    
+
+
+@require_http_methods(["GET"])
+def get_event_data(request):
+    """
+    Get course data for a given department.
+    
+    GET /api/course/
+    """
+
+    try:
+        client = MicroserviceClient()
+        event_data = client.get_events()
+        return JsonResponse({
+            'status': 'success',
+            'count': len(event_data),
+            'data': event_data
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting event data")
+        return JsonResponse({
+            'status': 'error',
+            'error': e
+        })
